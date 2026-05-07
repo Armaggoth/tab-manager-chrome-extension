@@ -1,0 +1,90 @@
+{
+  "appName": {
+    "message": "Gestor de Pestañas",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "Gestiona, organiza y limpia tus pestañas del navegador de manera eficiente",
+    "description": "The description of the application"
+  },
+  "openSidePanel": {
+    "message": "Abrir Gestor de Pestañas",
+    "description": "Tooltip for the extension icon"
+  },
+  "tabsSection": {
+    "message": "Pestañas",
+    "description": "Section heading for tabs list"
+  },
+  "actionsSection": {
+    "message": "Acciones",
+    "description": "Section heading for actions"
+  },
+  "sortByDomain": {
+    "message": "Ordenar por Dominio",
+    "description": "Button to sort tabs by domain"
+  },
+  "groupByDomain": {
+    "message": "Agrupar por Dominio",
+    "description": "Button to group tabs by domain"
+  },
+  "groupByDomainNoSubdomain": {
+    "message": "Agrupar por Dominio (Sin Subdominio)",
+    "description": "Button to group tabs by domain ignoring subdomains"
+  },
+  "ungroup": {
+    "message": "Desagrupar",
+    "description": "Button to ungroup tabs"
+  },
+  "removeDuplicates": {
+    "message": "Eliminar Duplicados",
+    "description": "Button to remove duplicate tabs"
+  },
+  "moveDomainCurrentWindow": {
+    "message": "Mover Dominio (Ventana Actual)",
+    "description": "Button to move tabs from current window"
+  },
+  "moveDomainAllWindows": {
+    "message": "Mover Dominio (Todas las Ventanas)",
+    "description": "Button to move tabs from all windows"
+  },
+  "bringToWindow": {
+    "message": "Traer Todos a Esta Ventana",
+    "description": "Button to bring all tabs to current window"
+  },
+  "closeDomainCurrentWindow": {
+    "message": "Cerrar Dominio (Ventana Actual)",
+    "description": "Button to close tabs from current window"
+  },
+  "closeDomainAllWindows": {
+    "message": "Cerrar Dominio (Todas las Ventanas)",
+    "description": "Button to close tabs from all windows"
+  },
+  "settings": {
+    "message": "Configuración",
+    "description": "Settings button label"
+  },
+  "noTabs": {
+    "message": "No se encontraron pestañas.",
+    "description": "Message when no tabs are found"
+  },
+  "ignorePinnedTabs": {
+    "message": "Ignorar pestañas fijadas en todas las operaciones",
+    "description": "Checkbox label in settings"
+  },
+  "ignorePinnedDescription": {
+    "message": "Cuando está habilitado, las pestañas fijadas no se verán afectadas por las acciones de ordenamiento, agrupación, movimiento o cierre.",
+    "description": "Description for ignore pinned tabs setting"
+  },
+  "language": {
+    "message": "Idioma",
+    "description": "Label for language select"
+  },
+  "settingsSaved": {
+    "message": "¡Configuración guardada!",
+    "description": "Status message when settings are saved"
+  },
+  "resetToDefaults": {
+    "message": "Restablecer Valores Predeterminados",
+    "description": "Button to reset settings"
+  }
+}

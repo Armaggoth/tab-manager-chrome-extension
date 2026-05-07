@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tab Manager</title>
+    <link rel="stylesheet" href="side-panel.css" />
+  </head>
+  <body>
+    <div class="container" role="main">
+      <header>
+        <h1 id="app-title">Tab Manager</h1>
+      </header>
+
+      <section aria-labelledby="tabs-section-title">
+        <h2 id="tabs-section-title">Tabs</h2>
+        <div id="tabs-list" class="tabs-list" role="region" aria-live="polite">
+          <p id="no-tabs-message" class="empty-state">
+            No tabs found.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="actions-section-title">
+        <h2 id="actions-section-title">Actions</h2>
+        <div class="actions-grid" role="group" aria-label="Tab management actions">
+
+          <div class="action-group">
+            <h3>Sort & Group</h3>
+            <button
+              id="sort-by-domain"
+              class="btn btn-secondary"
+              aria-label="Sort tabs by domain"
+              title="Sort tabs alphabetically by domain"
+            >
+              Sort by Domain
+            </button>
+            <button
+              id="group-by-domain"
+              class="btn btn-secondary"
+              aria-label="Group tabs by domain"
+              title="Group tabs by their domain"
+            >
+              Group by Domain
+            </button>
+            <button
+              id="group-by-domain-ignore-subdomain"
+              class="btn btn-secondary"
+              aria-label="Group tabs by domain ignoring subdomains"
+              title="Group tabs by domain (e.g., example.com)"
+            >
+              Group by Domain (No Subdomain)
+            </button>
+            <button
+              id="ungroup"
+              class="btn btn-secondary"
+              aria-label="Ungroup tabs"
+              title="Ungroup all grouped tabs"
+            >
+              Ungroup
+            </button>
+          </div>
+
+          <div class="action-group">
+            <h3>Clean Up</h3>
+            <button
+              id="remove-duplicates"
+              class="btn btn-secondary"
+              aria-label="Remove duplicate tabs"
+              title="Close duplicate tabs keeping one per URL"
+            >
+              Remove Duplicates
+            </button>
+          </div>
+
+          <div class="action-group">
+            <h3>Move Tabs</h3>
+            <button
+              id="move-domain-current-window"
+              class="btn btn-secondary"
+              aria-label="Move domain tabs from current window"
+              title="Move all tabs with selected domain to a new window"
+            >
+              Move Domain (Current Window)
+            </button>
+            <button
+              id="move-domain-all-windows"
+              class="btn btn-secondary"
+              aria-label="Move domain tabs from all windows"
+              title="Move all tabs with selected domain from all windows to a new window"
+            >
+              Move Domain (All Windows)
+            </button>
+            <button
+              id="bring-to-window"
+              class="btn btn-secondary"
+              aria-label="Bring all tabs to current window"
+              title="Move all tabs from all windows to the current window"
+            >
+              Bring All to This Window
+            </button>
+          </div>
+
+          <div class="action-group">
+            <h3>Close Tabs</h3>
+            <button
+              id="close-domain-current-window"
+              class="btn btn-danger"
+              aria-label="Close domain tabs from current window"
+              title="Close all tabs with selected domain in current window"
+            >
+              Close Domain (Current Window)
+            </button>
+            <button
+              id="close-domain-all-windows"
+              class="btn btn-danger"
+              aria-label="Close domain tabs from all windows"
+              title="Close all tabs with selected domain from all windows"
+            >
+              Close Domain (All Windows)
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <button
+          id="settings-btn"
+          class="btn btn-small"
+          aria-label="Open settings"
+          title="Open extension settings"
+        >
+          ⚙️ Settings
+        </button>
+      </footer>
+    </div>
+
+    <script src="side-panel.js" type="module"></script>
+  </body>
+</html>

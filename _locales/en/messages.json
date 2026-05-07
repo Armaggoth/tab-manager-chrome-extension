@@ -1,0 +1,90 @@
+{
+  "appName": {
+    "message": "Tab Manager",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "Manage, organize, and clean up your browser tabs efficiently",
+    "description": "The description of the application"
+  },
+  "openSidePanel": {
+    "message": "Open Tab Manager",
+    "description": "Tooltip for the extension icon"
+  },
+  "tabsSection": {
+    "message": "Tabs",
+    "description": "Section heading for tabs list"
+  },
+  "actionsSection": {
+    "message": "Actions",
+    "description": "Section heading for actions"
+  },
+  "sortByDomain": {
+    "message": "Sort by Domain",
+    "description": "Button to sort tabs by domain"
+  },
+  "groupByDomain": {
+    "message": "Group by Domain",
+    "description": "Button to group tabs by domain"
+  },
+  "groupByDomainNoSubdomain": {
+    "message": "Group by Domain (No Subdomain)",
+    "description": "Button to group tabs by domain ignoring subdomains"
+  },
+  "ungroup": {
+    "message": "Ungroup",
+    "description": "Button to ungroup tabs"
+  },
+  "removeDuplicates": {
+    "message": "Remove Duplicates",
+    "description": "Button to remove duplicate tabs"
+  },
+  "moveDomainCurrentWindow": {
+    "message": "Move Domain (Current Window)",
+    "description": "Button to move tabs from current window"
+  },
+  "moveDomainAllWindows": {
+    "message": "Move Domain (All Windows)",
+    "description": "Button to move tabs from all windows"
+  },
+  "bringToWindow": {
+    "message": "Bring All to This Window",
+    "description": "Button to bring all tabs to current window"
+  },
+  "closeDomainCurrentWindow": {
+    "message": "Close Domain (Current Window)",
+    "description": "Button to close tabs from current window"
+  },
+  "closeDomainAllWindows": {
+    "message": "Close Domain (All Windows)",
+    "description": "Button to close tabs from all windows"
+  },
+  "settings": {
+    "message": "Settings",
+    "description": "Settings button label"
+  },
+  "noTabs": {
+    "message": "No tabs found.",
+    "description": "Message when no tabs are found"
+  },
+  "ignorePinnedTabs": {
+    "message": "Ignore pinned tabs in all operations",
+    "description": "Checkbox label in settings"
+  },
+  "ignorePinnedDescription": {
+    "message": "When enabled, pinned tabs will not be affected by sorting, grouping, moving, or closing actions.",
+    "description": "Description for ignore pinned tabs setting"
+  },
+  "language": {
+    "message": "Language",
+    "description": "Label for language select"
+  },
+  "settingsSaved": {
+    "message": "Settings saved!",
+    "description": "Status message when settings are saved"
+  },
+  "resetToDefaults": {
+    "message": "Reset to Defaults",
+    "description": "Button to reset settings"
+  }
+}

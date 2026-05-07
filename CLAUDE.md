@@ -1,0 +1,132 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Tab Manager is a Chrome extension (Manifest v3) that helps users organize and clean up browser tabs. The extension uses a **side panel UI** (not a popup) where users can trigger tab management operations via buttons. Core logic runs in a background **service worker**, while the UI communicates with it via message passing.
+
+**Key Requirement**: All operations are triggered by explicit user action only—no auto-grouping or background reorganization.
+
+## Architecture
+
+```
+Side Panel (UI Layer)
+  ↓ chrome.runtime.sendMessage()
+Service Worker (Logic Layer)
+  ↓ chrome.tabs.query(), chrome.windows.create()
+Chrome Tab/Window APIs
+```
+
+- **service-worker.js**: Contains utility functions (`extractDomain`, `detectGoogleDocsType`) and will house message handlers for each operation. Currently has utility functions but needs handlers.
+- **side-panel.html/js/css**: User interface with all 12 action buttons. Already includes semantic HTML and ARIA labels for accessibility.
+- **options.html/js/css**: Settings page (currently: ignore pinned tabs toggle, language selection). Uses `chrome.storage.sync` for persistence.
+- **_locales/**: English (en) and Spanish (es) translations. Update both when adding UI strings.
+
+## Requirements to Enforce
+
+1. **Pinned Tabs**: Users can toggle `ignorePinnedTabs` in settings. Filter tabs before operations if enabled.
+2. **Google Docs Detection**: URL patterns to extract document type (doc/spreadsheet/presentation/form) from docs.google.com URLs.
+3. **Operations Move to New Windows**: When moving tabs, create new Chrome windows (not tab groups).
+4. **User Action Only**: No background reorganization. Every operation starts from a button click.
+5. **Localization**: Always update both `_locales/en/messages.json` and `_locales/es/messages.json` when adding user-facing strings.
+
+## Key Functions
+
+### Existing Utilities (service-worker.js)
+
+- `extractDomain(url, ignoreSubdomain = false)` → Returns domain (e.g., `example.com`). If `ignoreSubdomain=true`, strips www subdomain.
+- `detectGoogleDocsType(url)` → Returns `'doc'`, `'spreadsheet'`, `'presentation'`, `'form'`, or `null`.
+
+### Message Passing Pattern
+
+Side panel sends messages like:
+```javascript
+chrome.runtime.sendMessage({
+  action: 'sortByDomain',
+  domain: 'example.com' // optional, for domain-specific operations
+});
+```
+
+Service worker receives and processes:
+```javascript
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  switch (request.action) {
+    case 'sortByDomain':
+      // Implement logic here
+      break;
+  }
+});
+```
+
+### Tab Operations Needed (Not Yet Implemented)
+
+Each requires a message handler in service-worker.js:
+
+1. **Sort by Domain** – Sort current window tabs alphabetically by domain
+2. **Group by Domain** – Move/reorganize tabs (implement grouping strategy)
+3. **Group by Domain (No Subdomain)** – Same, but treats www.example.com and example.com as same domain
+4. **Ungroup** – If grouping uses tab groups (later feature), ungroup them
+5. **Remove Duplicates** – Close duplicate tabs (same URL), keep one
+6. **Move Domain (Current Window)** → New Window – Select domain, move all matching tabs to new window
+7. **Move Domain (All Windows)** → New Window – Move matching tabs from all browser windows to new window
+8. **Bring All to This Window** – Move all tabs from other windows to current window
+9. **Close Domain (Current Window)** – Close all tabs matching selected domain in current window
+10. **Close Domain (All Windows)** – Close all matching tabs across all browser windows
+
+## Accessibility Standards
+
+**Already implemented** (maintain these):
+- Semantic HTML (`<main>`, `<section>`, `<header>`, `role="region"`)
+- ARIA labels and descriptions on all buttons
+- Keyboard navigation support
+- Focus indicators and `focus-visible` states
+- Dark mode support (`prefers-color-scheme`)
+- High contrast mode support (`prefers-contrast: more`)
+- Reduced motion support (`prefers-reduced-motion: reduce`)
+- Color contrast (WCAG AA)
+
+When adding new UI: Use semantic HTML first, add `aria-label` or `aria-labelledby` to interactive elements, test keyboard navigation.
+
+## Chrome APIs Used
+
+- `chrome.tabs.query()` – Fetch tabs from current/all windows
+- `chrome.windows.create()` – Create new windows
+- `chrome.tabs.move()` – Move tabs between windows
+- `chrome.tabs.remove()` – Close tabs
+- `chrome.sidePanel.open()` – Open side panel when icon clicked
+- `chrome.storage.sync` – Persist user settings (pinned tabs toggle, language)
+- `chrome.runtime.sendMessage()` / `onMessage` – IPC between side panel and service worker
+
+## File Responsibilities
+
+- **manifest.json** – Declares permissions, side panel, options page, icons
+- **service-worker.js** – Utility functions + message handlers (to be completed)
+- **side-panel.html/js/css** – User interface, event listeners, settings retrieval
+- **options.html/js/css** – Settings form, storage persistence
+- **_locales/en|es/messages.json** – UI string translations
+- **README.md** – User and developer documentation
+- **SETUP.md** – Step-by-step setup and next-steps guide
+
+## Development Notes
+
+- **No build step** – Vanilla JS, CSS, HTML. Load directly into Chrome via `chrome://extensions` (Developer mode).
+- **Icons** – Placeholder system in manifest.json but assets need to be created. Add 16x16, 48x48, 128x128 PNG files to `/assets/`.
+- **Testing** – No test framework yet. Manual testing in Chrome required for now.
+- **Storage** – Settings stored in `chrome.storage.sync` (synced across user's Chrome browsers).
+
+## Next Steps When Continuing
+
+1. Implement 10 message handlers in service-worker.js for tab operations
+2. Create domain selection UI/logic (currently uses `prompt()`, consider improving UX)
+3. Add icon assets to `/assets/`
+4. Test each operation in Chrome locally
+5. Consider error handling and user feedback (toast messages, dialogs)
+6. Build a package/zip for distribution
+
+## Common Gotchas
+
+- **Message Handlers**: Forgetting to implement a case in the `onMessage` listener will silently fail. Check the console for missing handlers.
+- **Domain Extraction**: URLs without a valid domain (data: URLs, blob: URLs, chrome:// URLs) return null from `extractDomain()`. Filter these before operations.
+- **Pinned Tabs**: Always check `settings.ignorePinnedTabs` before operating on tabs.
+- **Window Context**: `chrome.tabs.query({ currentWindow: true })` = tabs in active window. `chrome.tabs.query({})` = all tabs across all windows.
