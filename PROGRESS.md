@@ -44,6 +44,51 @@
 - [ ] Manual testing in Chrome
 - [ ] Add error handling/user feedback
 
+### 🔧 Advanced Feature: Custom Domain Grouping Rules
+
+**Requirement**: Allow users to define custom grouping behavior per domain.
+
+**Example use case**:
+- `ai.google.com`, `www.google.com`, `google.com`, `www.google.com/ai` → group together
+- `docs.google.com` → exclude from grouping
+- Some domains group by subdomain, some by base domain, some by path
+
+**What's needed**:
+1. **Domain Rules Config** (stored in `chrome.storage.sync`):
+   ```javascript
+   {
+     "groupingRules": {
+       "google.com": {
+         "groupBy": "baseDomain",  // "baseDomain", "subdomain", or "path"
+         "excluded": false,
+         "pathPatterns": [""] // optional path matching
+       },
+       "docs.google.com": {
+         "groupBy": "full",  // or "excluded"
+         "excluded": true
+       }
+     }
+   }
+   ```
+
+2. **Options Page Enhancement**:
+   - Add new section: "Domain Grouping Rules"
+   - List detected domains from current tabs
+   - For each: dropdown (Group by Base Domain / by Subdomain / by Path / Exclude)
+   - Save/load from storage
+
+3. **Service Worker Logic**:
+   - Update grouping functions to respect domain rules
+   - When no rules defined, use default behavior (groupBy option from button click)
+   - Apply path matching if specified
+
+4. **Complexity**: Medium
+   - Adds UI section to options page
+   - Requires rule evaluation logic in service worker
+   - Storage management for per-domain rules
+
+**Note**: This can be added after v1.0 ships. For MVP, keep the two existing grouping modes (by domain, by domain ignoring subdomains).
+
 ## How to Continue
 
 1. Read CLAUDE.md for architecture & Chrome API reference
