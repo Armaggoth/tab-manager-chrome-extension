@@ -13,6 +13,7 @@ A Chrome extension for efficiently managing, organizing, and cleaning up browser
 - **Clean Up**
   - Remove duplicate tabs
   - Ignore pinned tabs option
+  - Ignore grouped tabs option
 
 - **Move Tabs**
   - Move all tabs with the same domain from the current window to a new window

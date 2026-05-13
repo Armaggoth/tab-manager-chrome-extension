@@ -7,7 +7,7 @@
 **Scaffolding & Setup**
 - Manifest v3 configuration
 - Side panel UI with all 12 action buttons (full HTML/CSS/JS)
-- Options page (settings: ignore pinned tabs, language)
+- Options page (settings: ignore pinned tabs, ignore grouped tabs, language)
 - Service worker with utility functions (`extractDomain`, `detectGoogleDocsType`)
 - Localization files (English & Spanish)
 - Full A11y implementation (semantic HTML, ARIA, keyboard nav, dark/high-contrast/reduced-motion)

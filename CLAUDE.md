@@ -26,10 +26,11 @@ Chrome Tab/Window APIs
 ## Requirements to Enforce
 
 1. **Pinned Tabs**: Users can toggle `ignorePinnedTabs` in settings. Filter tabs before operations if enabled.
-2. **Google Docs Detection**: URL patterns to extract document type (doc/spreadsheet/presentation/form) from docs.google.com URLs.
-3. **Operations Move to New Windows**: When moving tabs, create new Chrome windows (not tab groups).
-4. **User Action Only**: No background reorganization. Every operation starts from a button click.
-5. **Localization**: Always update both `_locales/en/messages.json` and `_locales/es/messages.json` when adding user-facing strings.
+2. **Grouped Tabs**: Users can toggle `ignoreGroupedTabs` in settings. Filter tabs that are already in a group before operations if enabled.
+3. **Google Docs Detection**: URL patterns to extract document type (doc/spreadsheet/presentation/form) from docs.google.com URLs.
+4. **Operations Move to New Windows**: When moving tabs, create new Chrome windows (not tab groups).
+5. **User Action Only**: No background reorganization. Every operation starts from a button click.
+6. **Localization**: Always update both `_locales/en/messages.json` and `_locales/es/messages.json` when adding user-facing strings.
 
 ## Key Functions
 
@@ -129,4 +130,5 @@ When adding new UI: Use semantic HTML first, add `aria-label` or `aria-labelledb
 - **Message Handlers**: Forgetting to implement a case in the `onMessage` listener will silently fail. Check the console for missing handlers.
 - **Domain Extraction**: URLs without a valid domain (data: URLs, blob: URLs, chrome:// URLs) return null from `extractDomain()`. Filter these before operations.
 - **Pinned Tabs**: Always check `settings.ignorePinnedTabs` before operating on tabs.
+- **Grouped Tabs**: Always check `settings.ignoreGroupedTabs` before operating on tabs. Use `tab.groupId` property to detect grouped tabs (groupId !== chrome.tabs.TAB_GROUP_ID_NONE).
 - **Window Context**: `chrome.tabs.query({ currentWindow: true })` = tabs in active window. `chrome.tabs.query({})` = all tabs across all windows.
