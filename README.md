@@ -14,6 +14,7 @@ A Chrome extension for efficiently managing, organizing, and cleaning up browser
   - Remove duplicate tabs
   - Ignore pinned tabs option
   - Ignore grouped tabs option
+  - Find media playing tab across all windows
 
 - **Move Tabs**
   - Move all tabs with the same domain from the current window to a new window

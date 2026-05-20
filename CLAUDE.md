@@ -19,7 +19,7 @@ Chrome Tab/Window APIs
 ```
 
 - **service-worker.js**: Contains utility functions (`extractDomain`, `detectGoogleDocsType`) and will house message handlers for each operation. Currently has utility functions but needs handlers.
-- **side-panel.html/js/css**: User interface with all 12 action buttons. Already includes semantic HTML and ARIA labels for accessibility.
+- **side-panel.html/js/css**: User interface with action buttons for tab management. Already includes semantic HTML and ARIA labels for accessibility.
 - **options.html/js/css**: Settings page (currently: ignore pinned tabs toggle, language selection). Uses `chrome.storage.sync` for persistence.
 - **_locales/**: English (en) and Spanish (es) translations. Update both when adding UI strings.
 
@@ -74,6 +74,7 @@ Each requires a message handler in service-worker.js:
 8. **Bring All to This Window** – Move all tabs from other windows to current window
 9. **Close Domain (Current Window)** – Close all tabs matching selected domain in current window
 10. **Close Domain (All Windows)** – Close all matching tabs across all browser windows
+11. **Find Media Playing** – Find and focus the tab currently playing audio/video across all windows
 
 ## Accessibility Standards
 
@@ -95,9 +96,11 @@ When adding new UI: Use semantic HTML first, add `aria-label` or `aria-labelledb
 - `chrome.windows.create()` – Create new windows
 - `chrome.tabs.move()` – Move tabs between windows
 - `chrome.tabs.remove()` – Close tabs
+- `chrome.tabs.update()` – Update tab properties (focus, highlight)
 - `chrome.sidePanel.open()` – Open side panel when icon clicked
 - `chrome.storage.sync` – Persist user settings (pinned tabs toggle, language)
 - `chrome.runtime.sendMessage()` / `onMessage` – IPC between side panel and service worker
+- `tab.audible` – Property on tab object indicating if tab is playing audio/video
 
 ## File Responsibilities
 
@@ -118,7 +121,7 @@ When adding new UI: Use semantic HTML first, add `aria-label` or `aria-labelledb
 
 ## Next Steps When Continuing
 
-1. Implement 10 message handlers in service-worker.js for tab operations
+1. Implement 11 message handlers in service-worker.js for tab operations
 2. Create domain selection UI/logic (currently uses `prompt()`, consider improving UX)
 3. Add icon assets to `/assets/`
 4. Test each operation in Chrome locally

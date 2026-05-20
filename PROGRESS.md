@@ -16,7 +16,7 @@
 
 ### 🚀 Next: Implement Core Logic
 
-**Service Worker Message Handlers** (10 operations to implement in `service-worker.js`):
+**Service Worker Message Handlers** (11 operations to implement in `service-worker.js`):
 
 - [ ] Sort tabs by domain
 - [ ] Group tabs by domain
@@ -28,6 +28,7 @@
 - [ ] Bring all tabs to current window
 - [ ] Close domain tabs (current window)
 - [ ] Close domain tabs (all windows)
+- [ ] Find media playing tab across all windows
 
 **What's needed**:
 1. Add `chrome.runtime.onMessage.addListener()` to service-worker.js
