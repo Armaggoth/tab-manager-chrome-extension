@@ -14,46 +14,36 @@
 - Documentation (README.md, SETUP.md, CLAUDE.md)
 - Git initialized and pushed to https://github.com/Armaggoth/tab-manager-chrome-extension.git
 
-### ✅ Completed (Chat #2 - 2026-06-04)
+### 🚀 Next: Implement Core Logic
 
-**Google Docs Duplicate Detection Feature**
-- Added `extractGoogleDocsId()` utility function to extract document ID from Google Docs URLs
-- Added `detectDuplicateGoogleDocs` setting to options page with checkbox UI
-- Implemented setting persistence via `chrome.storage.sync`
-- Added localization strings (English & Spanish) for the new setting
-- Updated CLAUDE.md and PROGRESS.md with new requirements
+**Service Worker Message Handlers** (11 operations to implement in `service-worker.js`):
 
-### ✅ Completed (Chat #3 - 2026-06-04)
+- [ ] Sort tabs by domain
+- [ ] Group tabs by domain
+- [ ] Group tabs by domain (ignore subdomains)
+- [ ] Ungroup tabs
+- [ ] Remove duplicate tabs
+- [ ] Move domain tabs (current window) → new window
+- [ ] Move domain tabs (all windows) → new window
+- [ ] Bring all tabs to current window
+- [ ] Close domain tabs (current window)
+- [ ] Close domain tabs (all windows)
+- [ ] Find media playing tab across all windows
 
-**Core Logic Implementation - All 11 Service Worker Message Handlers**
-- Implemented `chrome.runtime.onMessage.addListener()` in service-worker.js
-- ✅ Sort tabs by domain
-- ✅ Group tabs by domain (with ignoreSubdomain option)
-- ✅ Ungroup tab groups
-- ✅ Remove duplicate tabs (with detectDuplicateGoogleDocs support)
-- ✅ Move domain tabs (current window) → new window
-- ✅ Move domain tabs (all windows) → new window
-- ✅ Bring all tabs to current window
-- ✅ Close domain tabs (current window)
-- ✅ Close domain tabs (all windows)
-- ✅ Find and focus currently playing media tab
-- Added helper functions: `filterTabs()`, `getSettings()`, `queryTabs()`, `moveTabs()`
-- All handlers respect user settings: ignorePinnedTabs, ignoreGroupedTabs, detectDuplicateGoogleDocs
+**What's needed**:
+1. Add `chrome.runtime.onMessage.addListener()` to service-worker.js
+2. Implement handler for each operation (10 cases in switch statement)
+3. Each handler needs to:
+   - Query tabs with `chrome.tabs.query()`
+   - Filter by domain/settings
+   - Perform the action (sort, move, close, etc.)
+   - Send response back to side panel
 
-### 🚀 Next: Testing & Polish
-
-**Testing & Manual Validation**:
-- [ ] Test each operation in Chrome locally
-- [ ] Verify filtering (pinned tabs, grouped tabs) works correctly
-- [ ] Test Google Docs duplicate detection
-- [ ] Verify move/close operations work across multiple windows
-- [ ] Test media finding functionality
-
-**Supporting Tasks**:
+**Supporting tasks**:
 - [ ] Improve domain selection UI (currently uses `prompt()`)
 - [ ] Add icon assets to `/assets/` (16x16, 48x48, 128x128 PNG)
-- [ ] Add error handling/user feedback (toast messages)
-- [ ] Build and package for distribution
+- [ ] Manual testing in Chrome
+- [ ] Add error handling/user feedback
 
 ### 🔧 Advanced Feature: Custom Domain Grouping Rules
 
@@ -100,29 +90,31 @@
 
 **Note**: This can be added after v1.0 ships. For MVP, keep the two existing grouping modes (by domain, by domain ignoring subdomains).
 
-## 📚 Documentation Structure
+## Research & Documentation
 
-Comprehensive documentation is organized in the `docs/` folder:
+**UI/UX Research Documentation**: See [`docs/index.md`](docs/index.md)
 
-- **[docs/index.md](docs/index.md)** – Main documentation index
-- **[docs/research/](docs/research/)** – UX/UI research (5 documents)
-- **[docs/design/](docs/design/)** – Design patterns and recommendations
-- **[docs/architecture/](docs/architecture/)** – Technical architecture
-- **[docs/guides/](docs/guides/)** – Setup and development guides
+The docs folder contains comprehensive research on:
+- Tab UI patterns and best practices
+- Chrome extension architecture and APIs
+- Progressive disclosure principles
+- Accordion/collapsible content patterns
+- Feature grouping strategy (with recommended UI models)
 
-**Quick Links**:
-- 🎯 **Best for UI decisions**: [Feature Grouping Strategy](docs/research/05-feature-grouping-strategy.md)
-- 🛠️ **For implementation**: [Chrome Extension UI Architecture](docs/research/02-chrome-extension-ui.md)
-- 📖 **Full overview**: [docs/index.md](docs/index.md)
+**Recommended Reading Order**:
+1. [Feature Grouping Strategy](docs/05-feature-grouping-strategy.md) – Specific recommendations for Tab Manager
+2. [Tab UI Patterns](docs/01-tab-ui-patterns.md) – Visual/interaction best practices
+3. [Progressive Disclosure](docs/03-progressive-disclosure.md) – How to prioritize features
+4. [Chrome Extension UI Architecture](docs/02-chrome-extension-ui.md) – Technical constraints
+5. [Accordions & Collapsible Content](docs/04-accordions-collapsible.md) – For expandable sections
 
 ## How to Continue
 
-1. **Understand the project**: Read [CLAUDE.md](CLAUDE.md) for full architecture
-2. **Setup locally**: Follow [docs/guides/SETUP.md](docs/guides/SETUP.md)
-3. **Design the UI**: Review [docs/research/05-feature-grouping-strategy.md](docs/research/05-feature-grouping-strategy.md)
-4. **Implement core logic**: service-worker.js utilities ready, needs message handlers
-5. **Test in Chrome**: side-panel.js already sends messages on button clicks
-6. **Refer to documentation**: [docs/index.md](docs/index.md) for best practices
+1. Read CLAUDE.md for architecture & Chrome API reference
+2. Review [Feature Grouping Strategy](docs/05-feature-grouping-strategy.md) for recommended UI changes
+3. Check service-worker.js—utilities are ready, needs message handlers
+4. Side panel is complete; it already sends messages on button clicks
+5. Implement handlers one at a time, test in Chrome locally
 
 ## Key Files
 

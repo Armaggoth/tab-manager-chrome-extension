@@ -1,11 +1,13 @@
 // Options page logic
 const ignorePinnedTabsCheckbox = document.getElementById('ignore-pinned-tabs');
+const detectDuplicateDocsCheckbox = document.getElementById('detect-duplicate-docs');
 const languageSelect = document.getElementById('language-select');
 const resetBtn = document.getElementById('reset-btn');
 const statusMessage = document.getElementById('status');
 
 const DEFAULTS = {
   ignorePinnedTabs: false,
+  detectDuplicateGoogleDocs: false,
   language: 'en',
 };
 
@@ -13,6 +15,7 @@ const DEFAULTS = {
 function loadSettings() {
   chrome.storage.sync.get(DEFAULTS, (items) => {
     ignorePinnedTabsCheckbox.checked = items.ignorePinnedTabs;
+    detectDuplicateDocsCheckbox.checked = items.detectDuplicateGoogleDocs;
     languageSelect.value = items.language;
   });
 }
@@ -21,6 +24,7 @@ function loadSettings() {
 function saveSettings() {
   const settings = {
     ignorePinnedTabs: ignorePinnedTabsCheckbox.checked,
+    detectDuplicateGoogleDocs: detectDuplicateDocsCheckbox.checked,
     language: languageSelect.value,
   };
 
@@ -40,6 +44,7 @@ function showStatus(message, type = 'success') {
 
 // Event listeners
 ignorePinnedTabsCheckbox.addEventListener('change', saveSettings);
+detectDuplicateDocsCheckbox.addEventListener('change', saveSettings);
 languageSelect.addEventListener('change', saveSettings);
 
 resetBtn.addEventListener('click', () => {

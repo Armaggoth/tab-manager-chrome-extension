@@ -75,6 +75,14 @@
     "message": "When enabled, pinned tabs will not be affected by sorting, grouping, moving, or closing actions.",
     "description": "Description for ignore pinned tabs setting"
   },
+  "detectDuplicateGoogleDocs": {
+    "message": "Detect duplicate Google Docs across pages, slides, and sheets",
+    "description": "Checkbox label in settings for detecting duplicate Google Docs"
+  },
+  "detectDuplicateGoogleDocsDescription": {
+    "message": "When enabled, the 'Remove Duplicates' operation will detect and remove duplicate tabs of the same Google Docs, Sheets, Slides, or Form—even if they're open on different pages or sheets.",
+    "description": "Description for detect duplicate Google Docs setting"
+  },
   "language": {
     "message": "Language",
     "description": "Label for language select"

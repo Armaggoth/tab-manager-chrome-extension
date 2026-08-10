@@ -70,8 +70,33 @@ tab-manager-extension/
 │   ├── en/messages.json    # English translations
 │   └── es/messages.json    # Spanish translations
 ├── assets/                 # Icons and images
+├── docs/                   # Comprehensive documentation
+│   ├── research/          # UX/UI research and best practices
+│   ├── design/            # Design patterns and recommendations
+│   ├── architecture/      # Technical architecture
+│   └── guides/            # Setup and development guides
+├── SETUP.md               # Setup instructions
+├── PROGRESS.md            # Development progress
+├── CLAUDE.md              # Full architecture documentation
 └── README.md              # This file
 ```
+
+## 📚 Documentation
+
+Complete documentation is available in the `docs/` folder:
+
+- **[docs/index.md](docs/index.md)** – Main documentation index
+- **[docs/research/](docs/research/)** – UX/UI research (Tab patterns, Progressive Disclosure, etc.)
+- **[docs/design/](docs/design/)** – Recommended UI structure and design decisions
+- **[docs/architecture/](docs/architecture/)** – Technical architecture details
+- **[docs/guides/](docs/guides/)** – Setup and development guides
+
+**Quick Links**:
+- 🎯 **For UI design**: [Feature Grouping Strategy](docs/research/05-feature-grouping-strategy.md)
+- 🛠️ **For implementation**: [Chrome Extension UI Architecture](docs/research/02-chrome-extension-ui.md)
+- 📖 **All topics**: [Documentation Index](docs/index.md)
+
+See [PROGRESS.md](PROGRESS.md) for development status and [SETUP.md](SETUP.md) for local setup instructions.
 
 ## Development
 

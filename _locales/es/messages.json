@@ -75,6 +75,14 @@
     "message": "Cuando está habilitado, las pestañas fijadas no se verán afectadas por las acciones de ordenamiento, agrupación, movimiento o cierre.",
     "description": "Description for ignore pinned tabs setting"
   },
+  "detectDuplicateGoogleDocs": {
+    "message": "Detectar Documentos de Google duplicados entre páginas, diapositivas y hojas",
+    "description": "Checkbox label in settings for detecting duplicate Google Docs"
+  },
+  "detectDuplicateGoogleDocsDescription": {
+    "message": "Cuando está habilitado, la operación 'Eliminar Duplicados' detectará y eliminará pestañas duplicadas del mismo Documento de Google, Hoja de Cálculo, Presentación o Formulario, incluso si están abiertos en diferentes páginas u hojas.",
+    "description": "Description for detect duplicate Google Docs setting"
+  },
   "language": {
     "message": "Idioma",
     "description": "Label for language select"
