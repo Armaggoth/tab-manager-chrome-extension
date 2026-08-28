@@ -18,7 +18,7 @@ Service Worker (Logic Layer)
 Chrome Tab/Window APIs
 ```
 
-- **service-worker.js**: Contains utility functions (`extractDomain`, `detectGoogleDocsType`, `extractGoogleDocsId`) and will house message handlers for each operation. Currently has utility functions but needs handlers.
+- **service-worker.js**: Contains utility functions (`extractDomain`, `detectGoogleDocsType`, `extractGoogleDocsId`) and message handlers for each tab operation.
 - **side-panel.html/js/css**: User interface with action buttons for tab management. Already includes semantic HTML and ARIA labels for accessibility.
 - **options.html/js/css**: Settings page (currently: ignore pinned tabs toggle, detect duplicate Google Docs toggle, language selection). Uses `chrome.storage.sync` for persistence.
 - **_locales/**: English (en) and Spanish (es) translations. Update both when adding UI strings.
@@ -62,7 +62,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 ```
 
-### Tab Operations Needed (Not Yet Implemented)
+### Implemented Tab Operations
+
+The service worker implements the operations below. The side panel also exposes an explicit `groupGoogleDocsByType` action for Docs, Sheets, Slides, and Forms.
 
 Each requires a message handler in service-worker.js:
 

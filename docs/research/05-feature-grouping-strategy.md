@@ -9,30 +9,31 @@
 2. Group tabs by domain
 3. Group tabs by domain (no subdomain)
 4. Ungroup tabs
+5. Group Google Docs by type (Docs, Sheets, Slides, and Forms)
 
 **Characteristics**: Reorganize/reorder existing tabs in current window
 
 #### Group 2: Movement & Relocation
-5. Move domain tabs (current window) → new window
-6. Move domain tabs (all windows) → new window
-7. Bring all tabs to current window
+6. Move domain tabs (current window) → new window
+7. Move domain tabs (all windows) → new window
+8. Bring all tabs to current window
 
 **Characteristics**: Move tabs between windows
 
 #### Group 3: Duplicate Management
-8. Remove duplicates
+9. Remove duplicates
 
 **Characteristics**: Clean up redundant content
 
 #### Group 4: Cleanup & Closing
-9. Close domain tabs (current window)
-10. Close domain tabs (all windows)
+10. Close domain tabs (current window)
+11. Close domain tabs (all windows)
 
 **Characteristics**: Remove tabs from active browsing
 
 #### Group 5: Search & Focus
-11. Find media playing
-12. (Future: Jump to tab, search tabs, etc.)
+12. Find media playing
+13. (Future: Jump to tab, search tabs, etc.)
 
 **Characteristics**: Locate and focus specific tabs
 
@@ -359,9 +360,9 @@ If side panel is very narrow, use single accordion:
 
 ## Implementation Roadmap
 
-### Phase 1: MVP (Current)
-- Single row of 12 buttons (or grouped by category)
-- No tabbed interface yet
+### Phase 1: MVP (Completed Baseline)
+- Grouped action buttons in a single responsive side-panel view
+- No tabbed interface
 - Basic functionality working
 
 ### Phase 2: UI Reorganization (Next)

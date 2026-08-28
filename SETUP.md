@@ -8,7 +8,7 @@ You've successfully created the following project structure:
 
 #### Core Extension Files
 - **manifest.json** - Extension configuration (Manifest v3)
-- **service-worker.js** - Background service worker with utility functions
+- **service-worker.js** - Background service worker with tab-operation handlers and utilities
   - `extractDomain(url, ignoreSubdomain)` - Extract domain from URL
   - `detectGoogleDocsType(url)` - Detect Google Docs type from URL
 
@@ -42,36 +42,15 @@ You've successfully created the following project structure:
 4. Select this folder
 5. The extension should appear in Chrome's toolbar
 
-## Step 3: Implement Core Logic
+## Step 3: Test Core Logic
 
-The service worker currently has utility functions but needs handlers for the main operations:
+The service worker now handles the main tab operations, including sorting, grouping, duplicate removal, moving, closing, bringing tabs between windows, and finding media-playing tabs. Use [docs/guides/MANUAL-TEST-PLAN.md](docs/guides/MANUAL-TEST-PLAN.md) to validate each operation with the relevant settings enabled.
 
-- [ ] Sort tabs by domain
-- [ ] Group tabs by domain
-- [ ] Group tabs by domain (ignore subdomain)
-- [ ] Ungroup tabs
-- [ ] Remove duplicate tabs
-- [ ] Move tabs to new window (current/all windows)
-- [ ] Bring all tabs to current window
-- [ ] Close tabs (current/all windows)
+The side panel also includes an explicit **Group Google Docs by Type** action for Google Docs, Sheets, Slides, and Forms.
 
-## Step 4: Add Message Handlers
+## Step 4: Manual Validation
 
-Update `service-worker.js` to handle messages from `side-panel.js`:
-
-```javascript
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  switch (request.action) {
-    case 'sortByDomain':
-      // Implement sorting logic
-      break;
-    case 'groupByDomain':
-      // Implement grouping logic
-      break;
-    // ... more cases
-  }
-});
-```
+Follow the [Manual Test Plan](docs/guides/MANUAL-TEST-PLAN.md) and record failures by settings profile.
 
 ## Step 5: Icon Assets
 
@@ -93,6 +72,6 @@ Create or add icons to `/assets/`:
 - ✅ Proper heading hierarchy
 - ✅ Color contrast compliance (WCAG AA)
 
-## Next: Step 2 - Core Logic Implementation
+## Next: Testing & Polish
 
-When ready, we'll implement the service worker message handlers for all tab operations.
+Run [docs/guides/MANUAL-TEST-PLAN.md](docs/guides/MANUAL-TEST-PLAN.md) and track follow-up work in [docs/guides/PROGRESS.md](docs/guides/PROGRESS.md).

@@ -76,7 +76,6 @@ tab-manager-extension/
 │   ├── architecture/      # Technical architecture
 │   └── guides/            # Setup and development guides
 ├── SETUP.md               # Setup instructions
-├── PROGRESS.md            # Development progress
 ├── CLAUDE.md              # Full architecture documentation
 └── README.md              # This file
 ```
@@ -96,7 +95,7 @@ Complete documentation is available in the `docs/` folder:
 - 🛠️ **For implementation**: [Chrome Extension UI Architecture](docs/research/02-chrome-extension-ui.md)
 - 📖 **All topics**: [Documentation Index](docs/index.md)
 
-See [PROGRESS.md](PROGRESS.md) for development status and [SETUP.md](SETUP.md) for local setup instructions.
+See [docs/guides/PROGRESS.md](docs/guides/PROGRESS.md) for development status and [SETUP.md](SETUP.md) for local setup instructions.
 
 ## Development
 

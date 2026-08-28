@@ -13,7 +13,7 @@ This folder contains documentation about Tab Manager's UI design, patterns, and 
 
 ## Recommended UI Structure
 
-Based on research and best practices, Tab Manager is recommended to use:
+Based on research and best practices, the following is the planned post-MVP UI reorganization. The current side panel remains a single responsive, scrollable action view:
 
 ### Hybrid Model: Tabs + Accordions + Progressive Disclosure
 

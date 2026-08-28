@@ -1,8 +1,8 @@
 # Development Progress
 
-## Current Status: Step 2 (Core Logic Implementation)
+## Current Status: Testing & Polish
 
-### ✅ Completed (Chat #1 - 2026-05-07)
+### Completed (Chat #1 - 2026-05-07)
 
 **Scaffolding & Setup**
 - Manifest v3 configuration
@@ -14,121 +14,135 @@
 - Documentation (README.md, SETUP.md, CLAUDE.md)
 - Git initialized and pushed to https://github.com/Armaggoth/tab-manager-chrome-extension.git
 
-### 🚀 Next: Implement Core Logic
+### Completed (Chat #2 - 2026-06-04)
 
-**Service Worker Message Handlers** (11 operations to implement in `service-worker.js`):
+**Google Docs Duplicate Detection Feature**
+- Added `extractGoogleDocsId()` utility function to extract document ID from Google Docs URLs
+- Added `detectDuplicateGoogleDocs` setting to options page with checkbox UI
+- Implemented setting persistence via `chrome.storage.sync`
+- Added localization strings (English & Spanish) for the new setting
+- Updated CLAUDE.md and this progress tracker with new requirements
 
-- [ ] Sort tabs by domain
-- [ ] Group tabs by domain
-- [ ] Group tabs by domain (ignore subdomains)
-- [ ] Ungroup tabs
-- [ ] Remove duplicate tabs
-- [ ] Move domain tabs (current window) → new window
-- [ ] Move domain tabs (all windows) → new window
-- [ ] Bring all tabs to current window
-- [ ] Close domain tabs (current window)
-- [ ] Close domain tabs (all windows)
-- [ ] Find media playing tab across all windows
+### Completed (Chat #3 - 2026-06-04)
 
-**What's needed**:
-1. Add `chrome.runtime.onMessage.addListener()` to service-worker.js
-2. Implement handler for each operation (10 cases in switch statement)
-3. Each handler needs to:
-   - Query tabs with `chrome.tabs.query()`
-   - Filter by domain/settings
-   - Perform the action (sort, move, close, etc.)
-   - Send response back to side panel
+**Core Logic Implementation - All 11 Service Worker Message Handlers**
+- Implemented `chrome.runtime.onMessage.addListener()` in service-worker.js
+- Sort tabs by domain
+- Group tabs by domain (with ignoreSubdomain option)
+- Ungroup tab groups
+- Remove duplicate tabs (with detectDuplicateGoogleDocs support)
+- Move domain tabs (current window) -> new window
+- Move domain tabs (all windows) -> new window
+- Bring all tabs to current window
+- Close domain tabs (current window)
+- Close domain tabs (all windows)
+- Find and focus currently playing media tab
+- Added helper functions: `filterTabs()`, `getSettings()`, `queryTabs()`, `moveTabs()`
+- All handlers respect user settings: ignorePinnedTabs, ignoreGroupedTabs, detectDuplicateGoogleDocs
 
-**Supporting tasks**:
+## Testing & Manual Validation
+
+- [ ] Execute the detailed [Manual Test Plan](MANUAL-TEST-PLAN.md) by settings profile and feature
+- [ ] Test each operation in Chrome locally
+- [ ] Verify filtering (pinned tabs, grouped tabs) works correctly
+- [ ] Test Google Docs duplicate detection
+- [ ] Verify move/close operations work across multiple windows
+- [ ] Test media finding functionality
+- [ ] Investigate the observed Sort by Domain defect involving `chrome://extensions/` and repeated clicks
+
+## Supporting Tasks
+
 - [ ] Improve domain selection UI (currently uses `prompt()`)
 - [ ] Add icon assets to `/assets/` (16x16, 48x48, 128x128 PNG)
-- [ ] Manual testing in Chrome
-- [ ] Add error handling/user feedback
+- [ ] Add error handling/user feedback (toast messages)
+- [ ] Build and package for distribution
+- [ ] Evaluate local Playwright automation to reduce manual extension reloads
 
-### 🔧 Advanced Feature: Custom Domain Grouping Rules
+## Advanced Features
+
+### Custom Domain Grouping Rules
 
 **Requirement**: Allow users to define custom grouping behavior per domain.
 
 **Example use case**:
-- `ai.google.com`, `www.google.com`, `google.com`, `www.google.com/ai` → group together
-- `docs.google.com` → exclude from grouping
+- `ai.google.com`, `www.google.com`, `google.com`, `www.google.com/ai` -> group together
+- `docs.google.com` -> exclude from grouping
 - Some domains group by subdomain, some by base domain, some by path
 
 **What's needed**:
-1. **Domain Rules Config** (stored in `chrome.storage.sync`):
-   ```javascript
-   {
-     "groupingRules": {
-       "google.com": {
-         "groupBy": "baseDomain",  // "baseDomain", "subdomain", or "path"
-         "excluded": false,
-         "pathPatterns": [""] // optional path matching
-       },
-       "docs.google.com": {
-         "groupBy": "full",  // or "excluded"
-         "excluded": true
-       }
-     }
-   }
-   ```
+1. **Domain Rules Config** (stored in `chrome.storage.sync`)
+2. **Options Page Enhancement** with detected domains and grouping choices
+3. **Service Worker Logic** to evaluate domain rules and path matching
 
-2. **Options Page Enhancement**:
-   - Add new section: "Domain Grouping Rules"
-   - List detected domains from current tabs
-   - For each: dropdown (Group by Base Domain / by Subdomain / by Path / Exclude)
-   - Save/load from storage
-
-3. **Service Worker Logic**:
-   - Update grouping functions to respect domain rules
-   - When no rules defined, use default behavior (groupBy option from button click)
-   - Apply path matching if specified
-
-4. **Complexity**: Medium
-   - Adds UI section to options page
-   - Requires rule evaluation logic in service worker
-   - Storage management for per-domain rules
+**Complexity**: Medium
 
 **Note**: This can be added after v1.0 ships. For MVP, keep the two existing grouping modes (by domain, by domain ignoring subdomains).
 
-## Research & Documentation
+### Google Docs Grouping by Document Type
 
-**UI/UX Research Documentation**: See [`docs/index.md`](docs/index.md)
+- [x] Add an explicit side-panel action to group Google Docs, Sheets, Slides, and Forms separately
+- [x] Preserve the existing domain-grouping behavior
+- [ ] Validate grouping behavior with mixed Google Docs and non-Docs tabs in Chrome
 
-The docs folder contains comprehensive research on:
-- Tab UI patterns and best practices
-- Chrome extension architecture and APIs
-- Progressive disclosure principles
-- Accordion/collapsible content patterns
-- Feature grouping strategy (with recommended UI models)
+### Future UX Task: Revisit Tab List Utility
 
-**Recommended Reading Order**:
-1. [Feature Grouping Strategy](docs/05-feature-grouping-strategy.md) – Specific recommendations for Tab Manager
-2. [Tab UI Patterns](docs/01-tab-ui-patterns.md) – Visual/interaction best practices
-3. [Progressive Disclosure](docs/03-progressive-disclosure.md) – How to prioritize features
-4. [Chrome Extension UI Architecture](docs/02-chrome-extension-ui.md) – Technical constraints
-5. [Accordions & Collapsible Content](docs/04-accordions-collapsible.md) – For expandable sections
+**Goal**: Explore whether a lightweight, on-demand tab utility can provide more value than a permanently visible tab list.
+
+**Research areas**:
+- Search tabs and jump directly to a selected tab
+- Filter tabs by domain or window
+- Find duplicate or related tabs
+- Select tabs for a management action
+- Surface focused utilities such as media-playing tabs
+
+**Constraints**:
+- Avoid recreating a full visual tab manager that is cumbersome to scan or operate
+- Keep the management buttons as the default side-panel experience
+- Use progressive disclosure, such as a `Find & Focus` or `Tab Overview` action
+
+**Next step**: Prototype the smallest useful interaction and validate it before adding the tab list back to the main side panel. See [Feature Grouping Strategy](../research/05-feature-grouping-strategy.md) and [Progressive Disclosure](../research/03-progressive-disclosure.md).
+
+## Documentation Structure
+
+Comprehensive documentation is organized in the [`docs/`](../) folder:
+
+- [Documentation index](../index.md)
+- [UX/UI research](../research/)
+- [Design patterns](../design/)
+- [Technical architecture](../architecture/)
+- [Setup and development guides](./)
 
 ## How to Continue
 
-1. Read CLAUDE.md for architecture & Chrome API reference
-2. Review [Feature Grouping Strategy](docs/05-feature-grouping-strategy.md) for recommended UI changes
-3. Check service-worker.js—utilities are ready, needs message handlers
-4. Side panel is complete; it already sends messages on button clicks
-5. Implement handlers one at a time, test in Chrome locally
+1. **Understand the project**: Read [CLAUDE.md](../../CLAUDE.md) for full architecture
+2. **Setup locally**: Follow [SETUP.md](SETUP.md)
+3. **Design the UI**: Review [Feature Grouping Strategy](../research/05-feature-grouping-strategy.md)
+4. **Test in Chrome**: Load the extension and test each operation
+5. **Refer to documentation**: Use [docs/index.md](../index.md) for the documentation hub
 
 ## Key Files
 
-- **service-worker.js** — Where core logic goes (currently 40 lines, needs ~200-300 more)
-- **side-panel.js** — Already sends messages, no changes needed
-- **CLAUDE.md** — Full architecture & requirements doc
-- **manifest.json** — Already has all permissions needed (tabs, windows, storage, sidePanel)
+- [service-worker.js](../../service-worker.js) - Core tab-operation logic
+- [side-panel.js](../../side-panel.js) - Button event handling and message passing
+- [CLAUDE.md](../../CLAUDE.md) - Full architecture and requirements
+- [manifest.json](../../manifest.json) - Extension permissions and configuration
 
 ## Testing Approach
 
-1. Load in Chrome: `chrome://extensions/` → Developer mode → Load unpacked
-2. Click extension icon → side panel opens
-3. Click each button to test (will error until handlers implemented)
+1. Load in Chrome: `chrome://extensions/` -> Developer mode -> Load unpacked
+2. Click the extension icon to open the side panel
+3. Click each button to test
 4. Use Chrome DevTools on the service worker to debug
+
+### Future: Playwright Automation
+
+If manual reloads become too disruptive, evaluate Playwright with its bundled Chromium and a persistent browser context that loads this unpacked Manifest V3 extension. The initial scope should be:
+
+- Unit tests for utility functions such as domain extraction and Google Docs ID detection
+- Service-worker tests with mocked Chrome APIs for tab and window operations
+- A small smoke suite for the side-panel page, button interactions, and message passing
+
+The real Chrome side-panel container is browser UI, so the extension page can be tested directly while side-panel opening and sizing remain a small manual smoke check. Prefer local Playwright automation before considering BrowserStack, Sauce Labs, or another cloud browser service. See the [official Playwright Chrome extension guidance](https://playwright.dev/docs/chrome-extensions).
 
 ## Monetization Decision
 

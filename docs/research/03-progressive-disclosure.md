@@ -162,10 +162,12 @@ These can be hidden in an expanded section or separate tab:
 
 ### Recommended UI Structure
 
-#### Current State
-- 12 buttons in a grid, all visible at once
-- May be overwhelming for new users
-- All features have equal visual weight
+#### Earlier Baseline
+- 12 buttons were presented in one grid
+- This was overwhelming for new users
+- All features had equal visual weight
+
+The current side panel uses one responsive, scrollable action view without a visible tab list. The recommendations below describe a possible future reorganization.
 
 #### Recommended Changes
 

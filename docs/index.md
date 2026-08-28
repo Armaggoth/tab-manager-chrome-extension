@@ -4,8 +4,8 @@
 
 This folder contains all documentation for Tab Manager, organized into logical sections for easy navigation.
 
-**Last Updated**: May 28, 2026  
-**Current Phase**: Step 2 - Core Logic Implementation
+**Last Updated**: August 28, 2026
+**Current Phase**: Testing & Polish
 
 ---
 
@@ -30,6 +30,7 @@ Service worker patterns, message passing, Chrome APIs, and implementation detail
 ### [📋 Guides](guides/index.md) – Setup & Development Guides
 - [SETUP.md](guides/SETUP.md) – Initial project setup
 - [PROGRESS.md](guides/PROGRESS.md) – Development progress tracking
+- [MANUAL-TEST-PLAN.md](guides/MANUAL-TEST-PLAN.md) – Feature-by-feature manual test plan
 
 ---
 
@@ -72,7 +73,9 @@ See [Research folder](research/index.md) for full details on each topic.
 
 Based on research and best practices:
 
-### Hybrid Model: Tabs + Accordions + Progressive Disclosure
+### Hybrid Model: Tabs + Accordions + Progressive Disclosure (planned)
+
+The current side panel uses one responsive, scrollable action view. The hybrid model below is a planned UI reorganization, not the current implementation.
 
 **Tab 1: Quick Actions** (Most-used, expanded by default)
 - Sort by Domain
@@ -110,8 +113,9 @@ docs/
 │   └── index.md
 ├── guides/
 │   ├── index.md
-│   ├── SETUP.md (symlink to root)
-│   └── PROGRESS.md (symlink to root)
+│   ├── SETUP.md
+│   ├── PROGRESS.md
+│   └── MANUAL-TEST-PLAN.md
 └── 00-overview/
     └── (project overview structure)
 ```
@@ -123,7 +127,7 @@ docs/
 - [README.md](../README.md) – User-facing project documentation
 - [CLAUDE.md](../CLAUDE.md) – Full architecture and requirements
 - [SETUP.md](../SETUP.md) – Initial setup guide
-- [PROGRESS.md](../PROGRESS.md) – Development progress tracking
+- [PROGRESS.md](guides/PROGRESS.md) – Development progress tracking
 
 ---
 
@@ -167,4 +171,4 @@ docs/
 
 ---
 
-**Date**: May 28, 2026 | **Phase**: Step 2 - Core Logic Implementation
+**Date**: August 28, 2026 | **Phase**: Testing & Polish
