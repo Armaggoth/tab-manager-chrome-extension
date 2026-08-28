@@ -28,7 +28,6 @@ Based on research and best practices, the following is the planned post-MVP UI r
 
 **Tab 2: Settings** (User preferences)
 - Ignore Pinned Tabs
-- Ignore Grouped Tabs
 - Language selection
 
 ---

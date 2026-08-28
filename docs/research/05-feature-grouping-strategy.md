@@ -11,6 +11,12 @@
 4. Ungroup tabs
 5. Group Google Docs by type (Docs, Sheets, Slides, and Forms)
 
+Google editor tabs use a shared type rule for sorting and grouping. Recognized URL families are Docs, Sheets, Slides, Forms, Vids, and Drawings. Within the `docs.google.com` sort group, the order is Docs, Sheets, Slides, Forms, Vids, then Drawings. The classifier, ordering, and labels are implemented once and reused by both operations.
+
+### Grouping Safety Rule
+
+Existing tab groups are user-owned organization. Normal sorting and grouping always leave grouped tabs untouched. Grouping operates only on ungrouped eligible tabs, creates separate groups even when a matching group already exists, and is idempotent. For `docs.google.com`, **Group by Domain** groups by editor type, while **Group by Domain (No Subdomain)** collapses all editor types into one `google.com` group. A separate explicit **Regroup All Tabs** action is required before existing groups may be changed.
+
 **Characteristics**: Reorganize/reorder existing tabs in current window
 
 #### Group 2: Movement & Relocation
@@ -273,7 +279,7 @@ Simple accordion structure, good for narrow side panel:
 │                                     │
 │ SETTINGS TAB                        │
 │ ☐ Ignore Pinned Tabs               │
-│ ☐ Ignore Grouped Tabs              │
+│ Existing tab groups are always protected during normal operations.            │
 │ 🌐 Language: English ▼             │
 │                                     │
 └─────────────────────────────────────┘

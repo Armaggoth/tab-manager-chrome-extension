@@ -2,6 +2,16 @@
 
 This plan validates each side-panel operation against the settings that affect it. Run the tests in a disposable Chrome profile or with tabs that can be safely moved, grouped, and closed.
 
+## Automated Tests
+
+Run the unit tests from the repository root with:
+
+```text
+npm test
+```
+
+The current suite covers **Sort by Domain** through the service-worker message path, including alphabetical ordering, repeated-click stability with an interleaved special URL, and pinned/grouped-tab exclusions. Add unit tests for each subsequent feature before or alongside its manual validation.
+
 ## Test Fixture
 
 Create these tabs in **Window A**, in a deliberately mixed order:
@@ -47,60 +57,104 @@ For every case, answer:
 4. Did the operation preserve tabs excluded by the active settings? **Yes/No/Not applicable**
 5. What was unexpected? **Open answer, optional**
 
+## Sorting Debug View
+
+Use the **Sorting Debug** section above the action buttons when investigating sort behavior.
+
+1. Arrange a mixed set of regular, empty, and special tabs in the current window.
+2. Include at least one pinned tab.
+3. Click **Scramble Tabs** to create a fresh random order.
+4. Click **Read Current Domains** and capture the list as the before state.
+5. Click **Sort by Domain**.
+6. Capture the refreshed list as the after state.
+7. Click **Copy Tab List** and paste the result into the bug report.
+
+Expected:
+
+- Every current-window tab appears in both lists, including empty and special tabs.
+- **Scramble Tabs** randomizes pinned and unpinned tabs independently, while keeping pinned tabs in Chrome's pinned region.
+- Each row includes its position, extracted domain or a no-domain label, the URL, `Pinned: Yes` or `Pinned: No`, `Grouped: Yes` or `Grouped: No`, the group ID (or `Group ID: None` when ungrouped), and the group name (or `Group Name: None` when ungrouped).
+- The after state reflects the actual browser tab order after sorting.
+- The debug view does not apply the pinned/grouped filtering settings.
+
+Questions:
+
+1. Did **Read Current Domains** show every current-window tab? **Yes/No**
+2. Did the list include empty and special tabs? **Yes/No**
+3. Did every row include the correct pinned flag? **Yes/No**
+4. Did every row include the correct grouped flag, group ID, and group name? **Yes/No**
+5. Did the list refresh after clicking **Sort by Domain**? **Yes/No**
+6. Did **Copy Tab List** copy the complete visible list, including URLs, pinned flags, group IDs, and group names? **Yes/No**
+
 ## Test Cases
 
 ### 1. Sort by Domain
 
-Run with Profiles A-D. In Window A, click **Sort by Domain**.
+Run with Profiles A-D. In Window A, click **Sort by Domain**. Profile B/D must be repeated after Profile A so both unchecked and checked pinned-tab behavior are tested. Existing grouped tabs must be protected in every profile.
 
 Expected:
 
 - Sortable tabs in the current window are ordered by hostname.
+- A leading `www.` is ignored for sorting.
+- For domains without `www.`, the first domain part is used as the primary sort key. For example, `aistudio.google.com` sorts by `aistudio`.
+- `chrome:` is treated as a protocol, so `chrome://newtab/` sorts by `newtab` and `chrome://extensions/` sorts by `extensions`.
+- All `chrome-extension://` tabs share the `chrome-extension` sort key and remain together.
 - Other windows are unchanged.
+- With Ignore Pinned Tabs off, pinned tabs are sorted within the pinned region.
 - Pinned tabs are unchanged when Profile B or D is active.
-- Already-grouped tabs are unchanged when Profile C or D is active.
-- Special URLs such as `chrome://extensions/` are not sorted by the operation.
+- Already-grouped tabs are unchanged in every profile; grouped-tab protection is always enabled.
+- Special URLs such as `chrome://extensions/` are included and sorted using their available domain/URL label.
 
 Additional questions:
 
 1. Did the first click produce the same stable order when repeated? **Yes/No**
-2. Did `chrome://extensions/` stay in a stable position instead of moving on repeated clicks? **Yes/No/Not tested**
+2. Did `chrome://extensions/` stay in a stable sorted position when the sort was repeated? **Yes/No/Not tested**
 3. Did the result match the intended hostname ordering for all normal web tabs? **Yes/No**
 
 Known issue from the first manual run: repeated clicks moved `chrome://extensions/` upward until it sat beside the `chrome-extension` tab, and the observed order was not the expected hostname order. Treat this as a defect to investigate, not a passing result.
 
 ### 2. Group by Domain
 
-Reset the fixture. Run with Profiles A-D. In Window A, click **Group by Domain**.
+Reset the fixture with at least two existing groups. Run with Profiles A-D. In Window A, click **Group by Domain** twice.
 
 Expected:
 
 - Tabs with the same full hostname are placed in the same Chrome tab group.
+- Google editor tabs are the special case: Docs, Sheets, Slides, Forms, Vids, and Drawings are grouped by editor type rather than all sharing one `docs.google.com` group.
+- Unknown Google editor paths use a separate dynamic group key based on their first path segment.
 - Different subdomains, such as `aistudio.google.com` and `gemini.google.com`, remain separate groups.
 - Other windows are unchanged.
-- Excluded pinned or already-grouped tabs remain unchanged for Profiles B-D.
+- Existing grouped tabs remain unchanged in every profile.
+- Only ungrouped eligible tabs are grouped.
+- Ungrouped tabs matching an existing group title are placed in a separate new group; existing groups are never merged.
+- The second click produces no additional groups or tab movement.
 
 Questions:
 
 1. Was one group created per full hostname? **Yes/No**
 2. Were different subdomains kept separate? **Yes/No**
 3. Were excluded tabs left outside newly created groups? **Yes/No/Not applicable**
+4. Did the second click leave the groups unchanged? **Yes/No**
 
 ### 3. Group by Domain (No Subdomain)
 
-Reset the fixture. Run with Profiles A-D. In Window A, click **Group by Domain (No Subdomain)**.
+Reset the fixture with at least two existing groups. Run with Profiles A-D. In Window A, click **Group by Domain (No Subdomain)** twice.
 
 Expected:
 
 - Tabs are grouped by the base domain where supported.
+- All recognized Google editor types are collapsed into one `google.com` group.
 - `aistudio.google.com`, `gemini.google.com`, `notebooklm.google.com`, and `www.google.com` are grouped under `google.com`.
-- Excluded pinned or already-grouped tabs remain unchanged for Profiles B-D.
+- Existing grouped tabs remain unchanged in every profile.
+- Only ungrouped eligible tabs are grouped.
+- The second click produces no additional groups or tab movement.
 
 Questions:
 
 1. Were subdomains of the same base domain grouped together? **Yes/No**
 2. Were unrelated base domains kept separate? **Yes/No**
 3. Did any excluded tab get moved into a new group? **Yes/No**
+4. Did the second click leave the groups unchanged? **Yes/No**
 
 ### 4. Group Google Docs by Type
 
@@ -112,6 +166,8 @@ Expected:
 - Sheets tabs are grouped as **Google Sheets**.
 - Slides tabs are grouped as **Google Slides**.
 - Forms tabs are grouped as **Google Forms**.
+- Vids tabs are grouped as **Google Vids**.
+- Drawings tabs are grouped as **Google Drawings** when their URL uses the drawings editor path.
 - Non-Google tabs are not moved into these groups.
 - Pinned and already-grouped tabs follow the active filtering settings.
 
@@ -120,6 +176,19 @@ Questions:
 1. Did each recognized document type get its own group? **Yes/No**
 2. Were non-Google tabs left untouched? **Yes/No**
 3. Did the group titles identify Docs, Sheets, Slides, and Forms correctly? **Yes/No**
+4. Did Vids and Drawings use the correct labels when present? **Yes/No/Not tested**
+
+### Google Editor Type Sorting Rule
+
+Google editor tabs use the shared type classifier and sort key. Within the `docs` sort group, the expected order is:
+
+```text
+Google Docs -> Google Sheets -> Google Slides -> Google Forms -> Google Vids -> Google Drawings
+```
+
+Unsupported `docs.google.com` editor paths are placed after recognized types and sorted alphabetically by their first path segment. For example, `new-editor` sorts before `whiteboards`. If no path segment is available, the full URL is the final fallback.
+
+The same classifier, ordering, and labels must be used by **Group Google Docs by Type** so sorting and grouping remain consistent under the DRY principle.
 
 ### 5. Ungroup
 
@@ -251,11 +320,10 @@ Questions:
 
 1. Did the Settings button open the options page? **Yes/No**
 2. Did changing Ignore Pinned Tabs persist after reopening Settings? **Yes/No**
-3. Did changing Ignore Grouped Tabs persist after reopening Settings? **Yes/No**
-4. Did changing Detect Duplicate Google Docs persist after reopening Settings? **Yes/No**
-5. Did changing the language update the visible interface? **Yes/No/Not tested**
-6. Did the side panel expand and shrink with Chrome's panel width? **Yes/No**
-7. Did all controls remain keyboard accessible? **Yes/No**
+3. Did changing Detect Duplicate Google Docs persist after reopening Settings? **Yes/No**
+4. Did changing the language update the visible interface? **Yes/No/Not tested**
+5. Did the side panel expand and shrink with Chrome's panel width? **Yes/No**
+6. Did all controls remain keyboard accessible? **Yes/No**
 
 ## Test Results
 

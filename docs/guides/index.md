@@ -26,6 +26,9 @@ Feature-by-feature Chrome validation plan, including:
 - Yes/no questions for recording results
 - Known issues and regression checks
 
+### [BUG-LOG.md](BUG-LOG.md)
+Defects found during manual and focused automated testing, including reproduction steps, fixes, and retest results.
+
 ---
 
 ## Quick Links
@@ -33,6 +36,7 @@ Feature-by-feature Chrome validation plan, including:
 - **Project Setup**: See [SETUP.md](SETUP.md)
 - **Development Progress**: See [PROGRESS.md](PROGRESS.md)
 - **Manual testing**: See [MANUAL-TEST-PLAN.md](MANUAL-TEST-PLAN.md)
+- **Bug tracking**: See [BUG-LOG.md](BUG-LOG.md)
 - **Architecture Details**: See root [CLAUDE.md](../../CLAUDE.md)
 - **Project Overview**: See root [README.md](../../README.md)
 
@@ -53,5 +57,6 @@ Feature-by-feature Chrome validation plan, including:
 | SETUP.md | Guides | Initial setup instructions |
 | PROGRESS.md | Guides | Development progress tracking |
 | MANUAL-TEST-PLAN.md | Guides | Feature-by-feature manual validation |
+| BUG-LOG.md | Guides | Defect tracking and retest results |
 | CLAUDE.md | Root | Full architecture & requirements |
 | README.md | Root | User-facing documentation |

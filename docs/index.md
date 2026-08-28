@@ -31,6 +31,7 @@ Service worker patterns, message passing, Chrome APIs, and implementation detail
 - [SETUP.md](guides/SETUP.md) – Initial project setup
 - [PROGRESS.md](guides/PROGRESS.md) – Development progress tracking
 - [MANUAL-TEST-PLAN.md](guides/MANUAL-TEST-PLAN.md) – Feature-by-feature manual test plan
+- [BUG-LOG.md](guides/BUG-LOG.md) – Defects, fixes, and retest results
 
 ---
 
@@ -88,7 +89,6 @@ The current side panel uses one responsive, scrollable action view. The hybrid m
 
 **Tab 2: Settings**
 - Ignore Pinned Tabs
-- Ignore Grouped Tabs
 - Language
 
 See [Feature Grouping Strategy](research/05-feature-grouping-strategy.md) for detailed analysis and alternatives.
@@ -115,7 +115,8 @@ docs/
 │   ├── index.md
 │   ├── SETUP.md
 │   ├── PROGRESS.md
-│   └── MANUAL-TEST-PLAN.md
+│   ├── MANUAL-TEST-PLAN.md
+│   └── BUG-LOG.md
 └── 00-overview/
     └── (project overview structure)
 ```

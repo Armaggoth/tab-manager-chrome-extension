@@ -76,3 +76,13 @@ Create or add icons to `/assets/`:
 ## Next: Testing & Polish
 
 Run the [Manual Test Plan](MANUAL-TEST-PLAN.md), then track follow-up work in [PROGRESS.md](PROGRESS.md). Local Playwright automation is a deferred option if repeated manual extension reloads become too disruptive.
+
+## Commit Test Hook
+
+The repository includes a tracked `.githooks/pre-commit` hook that runs `npm test` before every commit. Activate it once in a fresh clone with:
+
+```text
+git config core.hooksPath .githooks
+```
+
+If the test command fails, Git stops the commit. Do not bypass the hook for normal commits.

@@ -18,27 +18,24 @@ Service Worker (Logic Layer)
 Chrome Tab/Window APIs
 ```
 
-- **service-worker.js**: Contains utility functions (`extractDomain`, `detectGoogleDocsType`, `extractGoogleDocsId`) and message handlers for each tab operation.
-- **side-panel.html/js/css**: User interface with action buttons for tab management. Already includes semantic HTML and ARIA labels for accessibility.
-- **options.html/js/css**: Settings page (currently: ignore pinned tabs toggle, detect duplicate Google Docs toggle, language selection). Uses `chrome.storage.sync` for persistence.
-- **_locales/**: English (en) and Spanish (es) translations. Update both when adding UI strings.
 
 ## Requirements to Enforce
 
 1. **Pinned Tabs**: Users can toggle `ignorePinnedTabs` in settings. Filter tabs before operations if enabled.
-2. **Grouped Tabs**: Users can toggle `ignoreGroupedTabs` in settings. Filter tabs that are already in a group before operations if enabled.
-3. **Google Docs Detection**: URL patterns to extract document type (doc/spreadsheet/presentation/form) from docs.google.com URLs.
+2. **Grouped Tabs**: Normal sorting and grouping operations must always protect tabs that are already in a group. Any operation that changes existing groups must be a separate, explicitly named action.
+3. **Google Docs Detection**: URL path patterns to extract document type (doc/spreadsheet/presentation/form/video/drawing) from docs.google.com URLs.
 4. **Duplicate Google Docs Detection**: Users can toggle `detectDuplicateGoogleDocs` in settings. When enabled, the "Remove Duplicates" operation detects duplicate tabs of the same Google Docs/Sheets/Slides/Form by comparing document IDs, even if they're open on different pages or sheets.
-5. **Operations Move to New Windows**: When moving tabs, create new Chrome windows (not tab groups).
-6. **User Action Only**: No background reorganization. Every operation starts from a button click.
-7. **Localization**: Always update both `_locales/en/messages.json` and `_locales/es/messages.json` when adding user-facing strings.
+5. **Grouping Safety**: Grouping operations must be idempotent. Repeating the same operation must not create duplicate groups or move tabs that are already in the correct group. Preserve existing groups and create separate groups for ungrouped matches; do not merge groups during normal operations.
+6. **Operations Move to New Windows**: When moving tabs, create new Chrome windows (not tab groups).
+7. **User Action Only**: No background reorganization. Every operation starts from a button click.
+8. **Localization**: Always update both `_locales/en/messages.json` and `_locales/es/messages.json` when adding user-facing strings.
 
 ## Key Functions
 
 ### Existing Utilities (service-worker.js)
 
 - `extractDomain(url, ignoreSubdomain = false)` → Returns domain (e.g., `example.com`). If `ignoreSubdomain=true`, strips www subdomain.
-- `detectGoogleDocsType(url)` → Returns `'doc'`, `'spreadsheet'`, `'presentation'`, `'form'`, or `null`.
+- `detectGoogleDocsType(url)` → Returns `'doc'`, `'spreadsheet'`, `'presentation'`, `'form'`, `'video'`, `'drawing'`, or `null`.
 - `extractGoogleDocsId(url)` → Extracts and returns the document ID from Google Docs URLs (e.g., from `/document/d/{docId}/edit`). Returns `null` if not a valid Google Docs URL. Used for duplicate detection across different pages/slides/sheets.
 
 ### Message Passing Pattern
@@ -69,8 +66,8 @@ The service worker implements the operations below. The side panel also exposes 
 Each requires a message handler in service-worker.js:
 
 1. **Sort by Domain** – Sort current window tabs alphabetically by domain
-2. **Group by Domain** – Move/reorganize tabs (implement grouping strategy)
-3. **Group by Domain (No Subdomain)** – Same, but treats www.example.com and example.com as same domain
+2. **Group by Domain** – Group ungrouped tabs by hostname, with `docs.google.com` grouped by editor type
+3. **Group by Domain (No Subdomain)** – Group ungrouped tabs by base domain, with all `docs.google.com` editor types grouped together
 4. **Ungroup** – If grouping uses tab groups (later feature), ungroup them
 5. **Remove Duplicates** – Close duplicate tabs (same URL or same Google Docs ID if `detectDuplicateGoogleDocs` is enabled), keep one
 6. **Move Domain (Current Window)** → New Window – Select domain, move all matching tabs to new window
@@ -137,7 +134,7 @@ When adding new UI: Use semantic HTML first, add `aria-label` or `aria-labelledb
 - **Message Handlers**: Forgetting to implement a case in the `onMessage` listener will silently fail. Check the console for missing handlers.
 - **Domain Extraction**: URLs without a valid domain (data: URLs, blob: URLs, chrome:// URLs) return null from `extractDomain()`. Filter these before operations.
 - **Pinned Tabs**: Always check `settings.ignorePinnedTabs` before operating on tabs.
-- **Grouped Tabs**: Always check `settings.ignoreGroupedTabs` before operating on tabs. Use `tab.groupId` property to detect grouped tabs (groupId !== chrome.tabs.TAB_GROUP_ID_NONE).
+- **Grouped Tabs**: Normal operations protect tabs already in a group. Use `tab.groupId` to detect grouped tabs (`groupId !== chrome.tabs.TAB_GROUP_ID_NONE`).
 - **Window Context**: `chrome.tabs.query({ currentWindow: true })` = tabs in active window. `chrome.tabs.query({})` = all tabs across all windows.
 
 ## 📚 Comprehensive Documentation

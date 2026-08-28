@@ -153,7 +153,6 @@ These can be hidden in an expanded section or separate tab:
 
 3. **Settings** (already in options page)
    - Ignore pinned tabs
-   - Ignore grouped tabs
    - Language
 
 ---

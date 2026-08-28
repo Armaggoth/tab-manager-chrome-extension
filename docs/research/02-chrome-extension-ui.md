@@ -221,13 +221,12 @@ chrome.tabs.update(tabId, { active: true });
 // Save settings across user's Chrome browsers
 chrome.storage.sync.set({
   ignorePinnedTabs: true,
-  ignoreGroupedTabs: false,
   language: 'en'
 });
 
 // Retrieve settings
-chrome.storage.sync.get(['ignorePinnedTabs', 'ignoreGroupedTabs'], (result) => {
-  const { ignorePinnedTabs, ignoreGroupedTabs } = result;
+chrome.storage.sync.get(['ignorePinnedTabs'], (result) => {
+  const { ignorePinnedTabs } = result;
 });
 ```
 
@@ -265,6 +264,6 @@ Side panel displays results/feedback to user
 
 - Panel is useful and complements browsing experience
 - No misleading or deceptive functionality
-- Respects user's pinned tabs and grouped tabs settings
+- Respects the user's pinned-tab setting and always protects existing tab groups during normal operations
 - Clear, accessible UI with keyboard support
 - Internationalized (English, Spanish)

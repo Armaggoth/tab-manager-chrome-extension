@@ -75,3 +75,13 @@ Create or add icons to `/assets/`:
 ## Next: Testing & Polish
 
 Run [docs/guides/MANUAL-TEST-PLAN.md](docs/guides/MANUAL-TEST-PLAN.md) and track follow-up work in [docs/guides/PROGRESS.md](docs/guides/PROGRESS.md).
+
+## Commit Test Hook
+
+The repository includes a tracked `.githooks/pre-commit` hook that runs `npm test` before every commit. Activate it once in a fresh clone with:
+
+```text
+git config core.hooksPath .githooks
+```
+
+If the test command fails, Git stops the commit. Do not bypass the hook for normal commits.

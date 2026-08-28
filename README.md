@@ -13,7 +13,6 @@ A Chrome extension for efficiently managing, organizing, and cleaning up browser
 - **Clean Up**
   - Remove duplicate tabs
   - Ignore pinned tabs option
-  - Ignore grouped tabs option
   - Find media playing tab across all windows
 
 - **Move Tabs**
