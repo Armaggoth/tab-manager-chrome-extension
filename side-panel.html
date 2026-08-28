@@ -12,15 +12,6 @@
         <h1 id="app-title">Tab Manager</h1>
       </header>
 
-      <section aria-labelledby="tabs-section-title">
-        <h2 id="tabs-section-title">Tabs</h2>
-        <div id="tabs-list" class="tabs-list" role="region" aria-live="polite">
-          <p id="no-tabs-message" class="empty-state">
-            No tabs found.
-          </p>
-        </div>
-      </section>
-
       <section aria-labelledby="actions-section-title">
         <h2 id="actions-section-title">Actions</h2>
         <div class="actions-grid" role="group" aria-label="Tab management actions">
@@ -50,6 +41,14 @@
               title="Group tabs by domain (e.g., example.com)"
             >
               Group by Domain (No Subdomain)
+            </button>
+            <button
+              id="group-google-docs-by-type"
+              class="btn btn-secondary"
+              aria-label="Group Google Docs tabs by document type"
+              title="Group Google Docs, Sheets, Slides, and Forms tabs by type"
+            >
+              Group Google Docs by Type
             </button>
             <button
               id="ungroup"

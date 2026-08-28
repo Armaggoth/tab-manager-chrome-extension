@@ -1,68 +1,9 @@
+import { extractDomain, extractGoogleDocsId, detectGoogleDocsType } from './utils.js';
+
 // Open side panel when extension icon is clicked
 chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId });
 });
-
-// Utility function to extract domain from URL
-export function extractDomain(url, ignoreSubdomain = false) {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname;
-
-    if (!ignoreSubdomain) {
-      return hostname;
-    }
-
-    // Remove subdomain: www.example.com -> example.com
-    const parts = hostname.split('.');
-    if (parts.length > 2) {
-      return parts.slice(-2).join('.');
-    }
-    return hostname;
-  } catch (e) {
-    return null;
-  }
-}
-
-// Extract Google Docs document ID from URL
-// Returns the document ID for duplicate detection across different pages/slides/sheets
-export function extractGoogleDocsId(url) {
-  try {
-    const urlObj = new URL(url);
-    if (urlObj.hostname !== 'docs.google.com') {
-      return null;
-    }
-
-    // Match patterns like /document/d/{docId}/ or /spreadsheets/d/{docId}/
-    const match = url.match(/\/(document|spreadsheets|presentation|forms)\/d\/([a-zA-Z0-9_-]+)/);
-    if (match && match[2]) {
-      return match[2];
-    }
-
-    return null;
-  } catch (e) {
-    return null;
-  }
-}
-
-// Detect Google Docs type from URL
-export function detectGoogleDocsType(url) {
-  try {
-    const urlObj = new URL(url);
-    if (urlObj.hostname !== 'docs.google.com') {
-      return null;
-    }
-
-    if (url.includes('/document/')) return 'doc';
-    if (url.includes('/spreadsheets/')) return 'spreadsheet';
-    if (url.includes('/presentation/')) return 'presentation';
-    if (url.includes('/forms/')) return 'form';
-
-    return 'unknown';
-  } catch (e) {
-    return null;
-  }
-}
 
 // Message listener for tab operations
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -81,6 +22,9 @@ async function handleMessage(request, sender, sendResponse) {
         break;
       case 'groupByDomain':
         await groupByDomain(settings, request.ignoreSubdomain);
+        break;
+      case 'groupGoogleDocsByType':
+        await groupGoogleDocsByType(settings);
         break;
       case 'ungroup':
         await ungroupTabs(settings);
@@ -184,6 +128,39 @@ async function groupByDomain(settings, ignoreSubdomain = false) {
       tabIds,
     });
     await chrome.tabGroups.update(group, { title: domain });
+  }
+}
+
+// Group Google Docs, Sheets, Slides, and Forms tabs by document type
+async function groupGoogleDocsByType(settings) {
+  const tabs = await queryTabs({ currentWindow: true });
+  const filtered = filterTabs(tabs, settings);
+  const groups = new Map();
+
+  filtered.forEach((tab) => {
+    const type = detectGoogleDocsType(tab.url);
+    if (!type || type === 'unknown') return;
+
+    if (!groups.has(type)) {
+      groups.set(type, []);
+    }
+    groups.get(type).push(tab);
+  });
+
+  const typeLabels = {
+    doc: 'Google Docs',
+    spreadsheet: 'Google Sheets',
+    presentation: 'Google Slides',
+    form: 'Google Forms',
+  };
+
+  for (const [type, documentTabs] of groups) {
+    const tabIds = documentTabs.map((tab) => tab.id);
+    const group = await chrome.tabGroups.create({
+      windowId: tabs[0].windowId,
+      tabIds,
+    });
+    await chrome.tabGroups.update(group, { title: typeLabels[type] });
   }
 }
 
