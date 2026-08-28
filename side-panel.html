@@ -12,6 +12,40 @@
         <h1 id="app-title">Tab Manager</h1>
       </header>
 
+      <section class="debug-section" aria-labelledby="debug-section-title">
+        <h2 id="debug-section-title">Sorting Debug</h2>
+        <div class="debug-controls">
+          <button
+            id="scramble-tabs"
+            class="btn btn-secondary"
+            aria-label="Scramble tabs"
+            title="Randomly reorder unpinned tabs in the current window"
+          >
+            Scramble Tabs
+          </button>
+          <button
+            id="read-current-domains"
+            class="btn btn-secondary"
+            aria-label="Read current domains"
+            title="Read every tab in the current window before sorting"
+          >
+            Read Current Domains
+          </button>
+          <button
+            id="copy-tab-list"
+            class="btn btn-secondary"
+            aria-label="Copy tab list"
+            title="Copy the current tab list to the clipboard"
+          >
+            Copy Tab List
+          </button>
+        </div>
+        <p id="debug-status" class="debug-status" role="status" aria-live="polite">
+          Click to read the current window.
+        </p>
+        <ol id="debug-tabs-list" class="debug-tabs-list" aria-label="Current window tabs"></ol>
+      </section>
+
       <section aria-labelledby="actions-section-title">
         <h2 id="actions-section-title">Actions</h2>
         <div class="actions-grid" role="group" aria-label="Tab management actions">

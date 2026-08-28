@@ -97,6 +97,12 @@ section:last-of-type {
   overflow-y: auto;
 }
 
+.debug-section {
+  flex: 0 1 auto;
+  max-height: 45%;
+  overflow-y: auto;
+}
+
 h2 {
   margin: 0 0 var(--spacing-md) 0;
   font-size: var(--font-size-lg);
@@ -110,6 +116,39 @@ h3 {
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.debug-status {
+  margin: var(--spacing-sm) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.debug-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.debug-controls .btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.debug-tabs-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: 0;
+  padding-left: var(--spacing-lg);
+}
+
+.debug-tab-item {
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
 }
 
 /* Button Styles */

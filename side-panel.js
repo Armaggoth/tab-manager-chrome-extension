@@ -15,7 +15,13 @@ const buttons = {
   closeDomainCurrentWindow: document.getElementById('close-domain-current-window'),
   closeDomainAllWindows: document.getElementById('close-domain-all-windows'),
   settings: document.getElementById('settings-btn'),
+  scrambleTabs: document.getElementById('scramble-tabs'),
+  readCurrentDomains: document.getElementById('read-current-domains'),
+  copyTabList: document.getElementById('copy-tab-list'),
 };
+
+const debugStatus = document.getElementById('debug-status');
+const debugTabsList = document.getElementById('debug-tabs-list');
 
 // Get current window tabs
 async function getCurrentWindowTabs() {
@@ -26,11 +32,41 @@ async function getCurrentWindowTabs() {
   });
 }
 
+async function getCurrentWindowGroups() {
+  return new Promise((resolve) => {
+    chrome.tabGroups.query({ windowId: chrome.windows.WINDOW_ID_CURRENT }, (groups) => {
+      resolve(groups);
+    });
+  });
+}
+
 // Button event listeners
 buttons.sortByDomain.addEventListener('click', async () => {
   await chrome.runtime.sendMessage({
     action: 'sortByDomain',
   });
+  await readCurrentDomains();
+});
+
+buttons.readCurrentDomains.addEventListener('click', async () => {
+  try {
+    await readCurrentDomains();
+  } catch (error) {
+    debugStatus.textContent = 'Could not read the current tab list.';
+    console.error('Error reading current tab list:', error);
+  }
+});
+
+buttons.copyTabList.addEventListener('click', copyTabList);
+
+buttons.scrambleTabs.addEventListener('click', async () => {
+  const response = await chrome.runtime.sendMessage({
+    action: 'scrambleTabs',
+  });
+  await readCurrentDomains();
+  if (response && !response.success) {
+    debugStatus.textContent = `Could not scramble tabs: ${response.error}`;
+  }
 });
 
 buttons.groupByDomain.addEventListener('click', async () => {
@@ -141,4 +177,49 @@ async function selectDomain() {
 
   const domain = prompt(`Select a domain:\n\n${domains.join('\n')}`);
   return domains.includes(domain) ? domain : null;
+}
+
+// Read every current-window tab for before/after sorting comparisons.
+async function readCurrentDomains() {
+  const tabs = await getCurrentWindowTabs();
+  const groups = await getCurrentWindowGroups();
+  const groupNames = new Map(groups.map((group) => [group.id, group.title || '(unnamed group)']));
+  debugTabsList.replaceChildren();
+  const lines = [];
+
+  tabs.forEach((tab, index) => {
+    const line = formatTabDebugLine(tab, index, groupNames);
+    const item = document.createElement('li');
+    item.className = 'debug-tab-item';
+    item.textContent = line;
+    debugTabsList.appendChild(item);
+    lines.push(line);
+  });
+
+  debugStatus.textContent = `Read ${tabs.length} tab${tabs.length === 1 ? '' : 's'} from the current window.`;
+  return lines.join('\n');
+}
+
+function formatTabDebugLine(tab, index, groupNames) {
+  const domain = extractDomain(tab.url);
+  const url = tab.url || '(empty URL)';
+  const domainLabel = domain || '(no domain)';
+  const grouped = tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE;
+  const groupId = grouped ? tab.groupId : 'None';
+  const groupName = grouped ? groupNames.get(tab.groupId) || '(unknown group)' : 'None';
+  return `${index + 1}. ${domainLabel} | URL: ${url} | Pinned: ${
+    tab.pinned ? 'Yes' : 'No'
+  } | Grouped: ${grouped ? 'Yes' : 'No'} | Group ID: ${groupId} | Group Name: ${groupName}`;
+}
+
+async function copyTabList() {
+  const tabList = await readCurrentDomains();
+
+  try {
+    await navigator.clipboard.writeText(tabList);
+    debugStatus.textContent = 'Copied the current tab list to the clipboard.';
+  } catch (error) {
+    debugStatus.textContent = 'Could not copy the tab list to the clipboard.';
+    console.error('Error copying tab list:', error);
+  }
 }

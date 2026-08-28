@@ -1,4 +1,13 @@
-import { extractDomain, extractGoogleDocsId, detectGoogleDocsType } from './utils.js';
+import {
+  extractDomain,
+  extractGoogleDocsId,
+  detectGoogleDocsType,
+  getGoogleDocsTypeLabel,
+  getGoogleDocsTypeSortKey,
+  getDomainSortKey,
+  getGroupingKey,
+  getGroupingLabel,
+} from './utils.js';
 
 // Open side panel when extension icon is clicked
 chrome.action.onClicked.addListener((tab) => {
@@ -19,6 +28,9 @@ async function handleMessage(request, sender, sendResponse) {
     switch (request.action) {
       case 'sortByDomain':
         await sortByDomain(settings);
+        break;
+      case 'scrambleTabs':
+        await scrambleTabs();
         break;
       case 'groupByDomain':
         await groupByDomain(settings, request.ignoreSubdomain);
@@ -64,7 +76,6 @@ function getSettings() {
     chrome.storage.sync.get(
       {
         ignorePinnedTabs: false,
-        ignoreGroupedTabs: false,
         detectDuplicateGoogleDocs: false,
       },
       (items) => {
@@ -78,7 +89,7 @@ function getSettings() {
 function filterTabs(tabs, settings) {
   return tabs.filter((tab) => {
     if (settings.ignorePinnedTabs && tab.pinned) return false;
-    if (settings.ignoreGroupedTabs && tab.groupId !== chrome.tabs.TAB_GROUP_ID_NONE) {
+    if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
       return false;
     }
     // Filter out special URLs
@@ -87,54 +98,138 @@ function filterTabs(tabs, settings) {
   });
 }
 
+function filterUngroupedTabs(tabs, settings) {
+  return tabs.filter((tab) => {
+    if (settings.ignorePinnedTabs && tab.pinned) return false;
+    if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) return false;
+    if (!tab.url || tab.url.startsWith('chrome://')) return false;
+    return true;
+  });
+}
+
 // Sort tabs by domain in current window
 async function sortByDomain(settings) {
   const tabs = await queryTabs({ currentWindow: true });
-  const filtered = filterTabs(tabs, settings);
-
-  const sorted = filtered.sort((a, b) => {
-    const domainA = extractDomain(a.url) || '';
-    const domainB = extractDomain(b.url) || '';
-    return domainA.localeCompare(domainB);
+  const pinnedTabs = tabs.filter((tab) => tab.pinned);
+  const unpinnedTabs = tabs.filter((tab) => !tab.pinned);
+  const sortablePinnedTabs = settings.ignorePinnedTabs
+    ? []
+    : pinnedTabs.filter((tab) => tab.groupId === chrome.tabGroups.TAB_GROUP_ID_NONE);
+  const sortableUnpinnedTabs = unpinnedTabs.filter((tab) => {
+    if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
+      return false;
+    }
+    return true;
   });
 
-  // Move tabs to match sorted order
-  const startIndex = tabs.length - filtered.length;
-  for (let i = 0; i < sorted.length; i++) {
-    await moveTabs([sorted[i].id], { index: startIndex + i, windowId: tabs[0].windowId });
+  const sortedPinnedTabs = sortTabsByDomain(sortablePinnedTabs);
+  const sortedUnpinnedTabs = sortTabsByDomain(sortableUnpinnedTabs);
+  const currentSortableIds = [...sortablePinnedTabs, ...sortableUnpinnedTabs].map(
+    (tab) => tab.id
+  );
+  const sortedSortableIds = [...sortedPinnedTabs, ...sortedUnpinnedTabs].map((tab) => tab.id);
+
+  if (currentSortableIds.every((tabId, index) => tabId === sortedSortableIds[index])) {
+    return;
   }
+
+  const desiredIds = [
+    ...sortedPinnedTabs.map((tab) => tab.id),
+    ...sortedUnpinnedTabs.map((tab) => tab.id),
+  ];
+  if (sortablePinnedTabs.length + sortableUnpinnedTabs.length === tabs.length) {
+    await moveTabs(desiredIds, { index: 0, windowId: tabs[0].windowId });
+    return;
+  }
+
+  const sortableIds = new Set([...sortablePinnedTabs, ...sortableUnpinnedTabs].map((tab) => tab.id));
+  const sortablePositions = tabs
+    .map((tab, index) => (sortableIds.has(tab.id) ? index : null))
+    .filter((index) => index !== null);
+  const workingTabs = [...tabs];
+
+  for (let i = 0; i < desiredIds.length; i++) {
+    const targetIndex = sortablePositions[i];
+    const currentIndex = workingTabs.findIndex((tab) => tab.id === desiredIds[i]);
+    if (currentIndex === targetIndex) continue;
+
+    await moveTabs([desiredIds[i]], {
+      index: targetIndex,
+      windowId: tabs[0].windowId,
+    });
+
+    const [movedTab] = workingTabs.splice(currentIndex, 1);
+    workingTabs.splice(targetIndex, 0, movedTab);
+  }
+}
+
+function sortTabsByDomain(tabs) {
+  return [...tabs].sort((a, b) => getDomainSortKey(a.url).localeCompare(getDomainSortKey(b.url)));
+}
+
+// Randomize pinned and unpinned tabs independently for repeatable manual testing.
+async function scrambleTabs() {
+  const tabs = await queryTabs({ currentWindow: true });
+  const pinnedTabs = tabs.filter((tab) => tab.pinned);
+  const unpinnedTabs = tabs.filter((tab) => !tab.pinned);
+
+  const shuffledPinnedTabs = shuffleTabs(pinnedTabs);
+  const shuffledUnpinnedTabs = shuffleTabs(unpinnedTabs);
+  const windowId = tabs[0]?.windowId;
+
+  for (let index = shuffledPinnedTabs.length - 1; index >= 0; index--) {
+    await moveTabs([shuffledPinnedTabs[index].id], {
+      index,
+      windowId,
+    });
+  }
+
+  for (let index = shuffledUnpinnedTabs.length - 1; index >= 0; index--) {
+    await moveTabs([shuffledUnpinnedTabs[index].id], {
+      index: shuffledPinnedTabs.length + index,
+      windowId,
+    });
+  }
+}
+
+function shuffleTabs(tabs) {
+  const shuffledTabs = [...tabs];
+  for (let index = shuffledTabs.length - 1; index > 0; index--) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffledTabs[index], shuffledTabs[randomIndex]] = [
+      shuffledTabs[randomIndex],
+      shuffledTabs[index],
+    ];
+  }
+  return shuffledTabs;
 }
 
 // Group tabs by domain
 async function groupByDomain(settings, ignoreSubdomain = false) {
   const tabs = await queryTabs({ currentWindow: true });
-  const filtered = filterTabs(tabs, settings);
+  const filtered = filterUngroupedTabs(tabs, settings);
 
   // Group tabs by domain
   const groups = new Map();
   filtered.forEach((tab) => {
-    const domain = extractDomain(tab.url, ignoreSubdomain) || 'unknown';
-    if (!groups.has(domain)) {
-      groups.set(domain, []);
+    const groupingKey = getGroupingKey(tab.url, ignoreSubdomain);
+    if (!groups.has(groupingKey)) {
+      groups.set(groupingKey, []);
     }
-    groups.get(domain).push(tab);
+    groups.get(groupingKey).push(tab);
   });
 
-  // Create and assign tab groups
-  for (const [domain, domainTabs] of groups) {
+  for (const [groupingKey, domainTabs] of groups) {
     const tabIds = domainTabs.map((t) => t.id);
-    const group = await chrome.tabGroups.create({
-      windowId: tabs[0].windowId,
-      tabIds,
-    });
-    await chrome.tabGroups.update(group, { title: domain });
+    const group = await groupTabs(tabIds);
+    await updateTabGroup(group, { title: getGroupingLabel(domainTabs[0].url, ignoreSubdomain) });
   }
 }
 
-// Group Google Docs, Sheets, Slides, and Forms tabs by document type
+// Group recognized Google editor tabs by document type
 async function groupGoogleDocsByType(settings) {
   const tabs = await queryTabs({ currentWindow: true });
-  const filtered = filterTabs(tabs, settings);
+  const filtered = filterUngroupedTabs(tabs, settings);
   const groups = new Map();
 
   filtered.forEach((tab) => {
@@ -147,27 +242,22 @@ async function groupGoogleDocsByType(settings) {
     groups.get(type).push(tab);
   });
 
-  const typeLabels = {
-    doc: 'Google Docs',
-    spreadsheet: 'Google Sheets',
-    presentation: 'Google Slides',
-    form: 'Google Forms',
-  };
+  const sortedGroups = [...groups.entries()].sort(([typeA], [typeB]) =>
+    getGoogleDocsTypeSortKey(typeA).localeCompare(getGoogleDocsTypeSortKey(typeB))
+  );
 
-  for (const [type, documentTabs] of groups) {
+  for (const [type, documentTabs] of sortedGroups) {
     const tabIds = documentTabs.map((tab) => tab.id);
-    const group = await chrome.tabGroups.create({
-      windowId: tabs[0].windowId,
-      tabIds,
-    });
-    await chrome.tabGroups.update(group, { title: typeLabels[type] });
+    const title = getGoogleDocsTypeLabel(type);
+    const group = await groupTabs(tabIds);
+    await updateTabGroup(group, { title });
   }
 }
 
 // Ungroup all tab groups in current window
 async function ungroupTabs(settings) {
   const tabs = await queryTabs({ currentWindow: true });
-  const grouped = tabs.filter((tab) => tab.groupId !== chrome.tabs.TAB_GROUP_ID_NONE);
+  const grouped = tabs.filter((tab) => tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE);
 
   for (const tab of grouped) {
     await chrome.tabs.ungroup([tab.id]);
@@ -290,5 +380,18 @@ function queryTabs(queryInfo) {
 function moveTabs(tabIds, moveProperties) {
   return new Promise((resolve) => {
     chrome.tabs.move(tabIds, moveProperties, (tabs) => resolve(tabs));
+  });
+}
+
+function groupTabs(tabIds, groupId) {
+  return new Promise((resolve) => {
+    const options = groupId === undefined ? { tabIds } : { tabIds, groupId };
+    chrome.tabs.group(options, (result) => resolve(result));
+  });
+}
+
+function updateTabGroup(groupId, updateProperties) {
+  return new Promise((resolve) => {
+    chrome.tabGroups.update(groupId, updateProperties, (group) => resolve(group));
   });
 }
