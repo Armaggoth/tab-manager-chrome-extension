@@ -14,10 +14,21 @@ let moveCalls = [];
 let removeCalls = [];
 let groups = [];
 let groupCalls = [];
+let windowCreateCalls = [];
+let updateCalls = [];
+let currentWindowId = 1;
 
 globalThis.chrome = {
   tabs: {
-    query: (queryInfo, callback) => callback([...currentTabs]),
+    query: (queryInfo, callback) => {
+      let result = queryInfo.currentWindow
+        ? currentTabs.filter((tab) => tab.windowId === currentWindowId)
+        : currentTabs;
+      if (queryInfo.active) {
+        result = result.filter((tab) => tab.active);
+      }
+      callback([...result]);
+    },
     group: (options, callback) => {
       const groupId = options.groupId ?? Math.max(0, ...groups.map((group) => group.id)) + 1;
       if (options.groupId === undefined) {
@@ -32,11 +43,26 @@ globalThis.chrome = {
     move: (tabIds, moveProperties, callback) => {
       moveCalls.push({ tabIds: [...tabIds], moveProperties });
       const ids = new Set(tabIds);
-      const movedTabs = tabIds.map((tabId) => currentTabs.find((tab) => tab.id === tabId));
+      const movedTabs = tabIds.map((tabId) => {
+        const tab = currentTabs.find((candidate) => candidate.id === tabId);
+        return moveProperties.windowId === undefined
+          ? tab
+          : { ...tab, windowId: moveProperties.windowId, pinned: false };
+      });
       const remainingTabs = currentTabs.filter((tab) => !ids.has(tab.id));
-      remainingTabs.splice(moveProperties.index, 0, ...movedTabs);
+      const insertIndex = moveProperties.index === -1 ? remainingTabs.length : moveProperties.index;
+      remainingTabs.splice(insertIndex, 0, ...movedTabs);
       currentTabs = remainingTabs;
       callback(movedTabs);
+    },
+    update: (tabId, updateProperties, callback) => {
+      updateCalls.push({ tabId, updateProperties });
+      currentTabs = currentTabs.map((tab) =>
+        tab.id === tabId ? { ...tab, ...updateProperties } : tab
+      );
+      const updatedTab = currentTabs.find((tab) => tab.id === tabId);
+      if (typeof callback === 'function') callback(updatedTab);
+      return Promise.resolve(updatedTab);
     },
     remove: (tabIds, callback) => {
       const ids = new Set(Array.isArray(tabIds) ? tabIds : [tabIds]);
@@ -53,6 +79,26 @@ globalThis.chrome = {
   },
   action: { onClicked: { addListener: () => {} } },
   sidePanel: { open: () => {} },
+  windows: {
+    WINDOW_ID_CURRENT: currentWindowId,
+    create: (createData, callback) => {
+      const windowId = Math.max(100, ...currentTabs.map((tab) => tab.windowId)) + 1;
+      windowCreateCalls.push({ ...createData, windowId });
+      currentTabs = currentTabs.map((tab) =>
+        tab.id === createData.tabId ? { ...tab, windowId } : tab
+      );
+      callback({ id: windowId });
+    },
+    getCurrent: (callback) => {
+      const currentWindow = { id: currentWindowId };
+      if (typeof callback === 'function') {
+        callback(currentWindow);
+        return undefined;
+      }
+      return Promise.resolve(currentWindow);
+    },
+    update: (windowId, updateInfo, callback) => callback({ id: windowId, ...updateInfo }),
+  },
   tabGroups: {
     TAB_GROUP_ID_NONE: -1,
     query: (queryInfo, callback) => callback(groups.filter((group) => group.windowId === queryInfo.windowId)),
@@ -91,6 +137,8 @@ function runSort(tabs, activeSettings = {}) {
   moveCalls = [];
   groupCalls = [];
   removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
   return new Promise((resolve) => {
     messageHandler({ action: 'sortByDomain' }, {}, resolve);
   });
@@ -102,8 +150,80 @@ function runRemoveDuplicates(tabs, activeSettings = {}) {
   moveCalls = [];
   groupCalls = [];
   removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
   return new Promise((resolve) => {
     messageHandler({ action: 'removeDuplicates' }, {}, resolve);
+  });
+}
+
+function runMoveUngroupedCurrentWindow(tabs, activeSettings = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'moveUngroupedCurrentWindow' }, {}, resolve);
+  });
+}
+
+function runMoveDomainCurrentWindow(tabs, activeSettings = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'moveDomainCurrentWindow' }, {}, resolve);
+  });
+}
+
+function runBringAllToCurrentWindow(tabs, activeSettings = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'bringToWindow' }, {}, resolve);
+  });
+}
+
+function runCloseDomainCurrentWindow(tabs, activeSettings = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'closeDomainCurrentWindow' }, {}, resolve);
+  });
+}
+
+function runCloseDomainAllWindows(tabs, activeSettings = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'closeDomainAllWindows' }, {}, resolve);
   });
 }
 
@@ -430,4 +550,151 @@ test('removeDuplicates respects ignorePinnedTabs and protects grouped tabs', { c
   // Tab 3 is grouped -> skipped by filter. Tab 4 is first seen unpinned for page2.
   assert.deepEqual(tabIds(), [1, 2, 3, 4]);
   assert.deepEqual(removeCalls, []);
+});
+
+test('removeDuplicates treats duplicate chrome URLs like duplicate regular URLs', { concurrency: false }, async () => {
+  await runRemoveDuplicates([
+    createTab(1, 'chrome://extensions/'),
+    createTab(2, 'https://example.com/'),
+    createTab(3, 'chrome://extensions/'),
+  ]);
+
+  assert.deepEqual(tabIds(), [1, 2]);
+  assert.deepEqual(removeCalls, [[3]]);
+});
+
+test('moves eligible ungrouped current-window tabs to a new window', { concurrency: false }, async () => {
+  await runMoveUngroupedCurrentWindow([
+    createTab(1, 'https://alpha.example/'),
+    createTab(2, 'https://grouped.example/', { groupId: 5 }),
+    createTab(3, 'chrome://extensions/'),
+    createTab(4, 'https://pinned.example/', { pinned: true }),
+    createTab(5, 'https://other-window.example/', { windowId: 2 }),
+    createTab(6, 'https://beta.example/'),
+  ], { ignorePinnedTabs: true });
+
+  const movedWindowId = windowCreateCalls[0].windowId;
+  assert.deepEqual(windowCreateCalls.map(({ tabId }) => tabId), [1]);
+  assert.deepEqual(moveCalls, [{ tabIds: [3, 6], moveProperties: { windowId: movedWindowId, index: -1 } }]);
+  assert.deepEqual(
+    currentTabs.filter((tab) => tab.windowId === movedWindowId).map((tab) => tab.id),
+    [1, 3, 6]
+  );
+  assert.deepEqual(
+    currentTabs.filter((tab) => tab.windowId === 1).map((tab) => tab.id),
+    [2, 4]
+  );
+  assert.equal(currentTabs.find((tab) => tab.id === 5).windowId, 2);
+});
+
+test('moves current-window domain tabs by active tab domain without a prompt value', { concurrency: false }, async () => {
+  await runMoveDomainCurrentWindow([
+    createTab(1, 'https://target.example/start', { active: true }),
+    createTab(2, 'https://target.example/next'),
+    createTab(3, 'https://other.example/'),
+    createTab(4, 'https://target.example/grouped', { groupId: 7 }),
+    createTab(5, 'https://target.example/other-window', { windowId: 2 }),
+  ]);
+
+  const movedWindowId = windowCreateCalls[0].windowId;
+  assert.deepEqual(windowCreateCalls.map(({ tabId }) => tabId), [1]);
+  assert.deepEqual(moveCalls, [
+    { tabIds: [2, 4], moveProperties: { windowId: movedWindowId, index: -1 } },
+  ]);
+  assert.deepEqual(
+    currentTabs.filter((tab) => tab.windowId === movedWindowId).map((tab) => tab.id),
+    [1, 2, 4]
+  );
+  assert.deepEqual(
+    currentTabs.filter((tab) => tab.windowId === 1).map((tab) => tab.id),
+    [3]
+  );
+  assert.equal(currentTabs.find((tab) => tab.id === 5).windowId, 2);
+});
+
+test('moves only the active Google editor type for domain moves', { concurrency: false }, async () => {
+  await runMoveDomainCurrentWindow([
+    createTab(1, 'https://docs.google.com/document/d/doc-a/edit', { active: true }),
+    createTab(2, 'https://docs.google.com/document/d/doc-b/edit', { groupId: 7 }),
+    createTab(3, 'https://docs.google.com/spreadsheets/d/sheet-a/edit'),
+    createTab(4, 'https://docs.google.com/presentation/d/slide-a/edit'),
+    createTab(5, 'https://other.example/'),
+  ]);
+
+  const movedWindowId = windowCreateCalls[0].windowId;
+  assert.deepEqual(windowCreateCalls.map(({ tabId }) => tabId), [1]);
+  assert.deepEqual(moveCalls, [
+    { tabIds: [2], moveProperties: { windowId: movedWindowId, index: -1 } },
+  ]);
+  assert.deepEqual(
+    currentTabs.filter((tab) => tab.windowId === movedWindowId).map((tab) => tab.id),
+    [1, 2]
+  );
+  assert.deepEqual(
+    currentTabs.filter((tab) => tab.windowId === 1).map((tab) => tab.id),
+    [3, 4, 5]
+  );
+});
+
+test('bring all to this window moves pinned and grouped tabs', { concurrency: false }, async () => {
+  await runBringAllToCurrentWindow([
+    createTab(1, 'https://current.example/'),
+    createTab(2, 'https://other.example/a', { windowId: 2 }),
+    createTab(3, 'https://other.example/pinned', { windowId: 2, pinned: true }),
+    createTab(4, 'https://other.example/grouped', { windowId: 3, groupId: 8 }),
+  ], { ignorePinnedTabs: true });
+
+  assert.deepEqual(moveCalls, [
+    { tabIds: [3], moveProperties: { windowId: 1, index: -1 } },
+    { tabIds: [2, 4], moveProperties: { windowId: 1, index: -1 } },
+  ]);
+  assert.deepEqual(updateCalls, [
+    { tabId: 3, updateProperties: { pinned: true } },
+  ]);
+  assert.deepEqual(
+    currentTabs.filter((tab) => tab.windowId === 1).map((tab) => tab.id),
+    [1, 3, 2, 4]
+  );
+  assert.equal(currentTabs.find((tab) => tab.id === 3).pinned, true);
+  assert.equal(currentTabs.find((tab) => tab.id === 4).groupId, 8);
+});
+
+test('closes current-window domain tabs including grouped matches', { concurrency: false }, async () => {
+  await runCloseDomainCurrentWindow([
+    createTab(1, 'https://target.example/start', { active: true }),
+    createTab(2, 'https://target.example/grouped', { groupId: 7 }),
+    createTab(3, 'https://target.example/other-window', { windowId: 2 }),
+    createTab(4, 'https://other.example/'),
+  ]);
+
+  assert.deepEqual(removeCalls, [[1, 2]]);
+  assert.deepEqual(tabIds(), [3, 4]);
+});
+
+test('closes current-window Google editor type tabs including grouped matches', { concurrency: false }, async () => {
+  await runCloseDomainCurrentWindow([
+    createTab(1, 'https://docs.google.com/document/d/doc-a/edit', { active: true }),
+    createTab(2, 'https://docs.google.com/document/d/doc-b/edit', { groupId: 7 }),
+    createTab(3, 'https://docs.google.com/spreadsheets/d/sheet-a/edit'),
+    createTab(4, 'https://docs.google.com/document/d/doc-other-window/edit', { windowId: 2 }),
+  ]);
+
+  assert.deepEqual(removeCalls, [[1, 2]]);
+  assert.deepEqual(tabIds(), [3, 4]);
+});
+
+test('closes all-window Google editor type tabs including grouped matches', { concurrency: false }, async () => {
+  await runCloseDomainAllWindows([
+    createTab(1, 'https://docs.google.com/spreadsheets/d/sheet-a/edit', { active: true }),
+    createTab(2, 'https://docs.google.com/spreadsheets/d/sheet-b/edit', { groupId: 7 }),
+    createTab(3, 'https://docs.google.com/spreadsheets/d/sheet-c/edit', { windowId: 2 }),
+    createTab(4, 'https://docs.google.com/document/d/doc-a/edit', { windowId: 2 }),
+    createTab(5, 'https://docs.google.com/spreadsheets/d/sheet-pinned/edit', {
+      pinned: true,
+      windowId: 2,
+    }),
+  ], { ignorePinnedTabs: true });
+
+  assert.deepEqual(removeCalls, [[1, 2, 3]]);
+  assert.deepEqual(tabIds(), [4, 5]);
 });

@@ -12,7 +12,7 @@
         <h1 id="app-title">Tab Manager</h1>
       </header>
 
-      <section class="debug-section" aria-labelledby="debug-section-title">
+      <section class="debug-section" aria-labelledby="debug-section-title" hidden>
         <h2 id="debug-section-title">Sorting Debug</h2>
         <div class="debug-controls">
           <button
@@ -30,6 +30,14 @@
             title="Read every tab in the current window before sorting"
           >
             Read Current Domains
+          </button>
+          <button
+            id="read-all-windows"
+            class="btn btn-secondary"
+            aria-label="Read all windows"
+            title="Read every tab from every browser window"
+          >
+            Read All Windows
           </button>
           <button
             id="copy-tab-list"
@@ -123,6 +131,14 @@
               title="Move all tabs with selected domain from all windows to a new window"
             >
               Move Domain (All Windows)
+            </button>
+            <button
+              id="move-ungrouped-current-window"
+              class="btn btn-secondary"
+              aria-label="Move ungrouped tabs from current window"
+              title="Move all ungrouped tabs from the current window to a new window"
+            >
+              Move Ungrouped to New Window
             </button>
             <button
               id="bring-to-window"

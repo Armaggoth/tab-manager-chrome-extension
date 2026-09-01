@@ -18,6 +18,7 @@ A Chrome extension for efficiently managing, organizing, and cleaning up browser
 - **Move Tabs**
   - Move all tabs with the same domain from the current window to a new window
   - Move all tabs with the same domain from all windows to a new window
+  - Move all ungrouped tabs from the current window to a new window
   - Bring all tabs from all windows to the current window
 
 - **Close Tabs**
@@ -25,7 +26,7 @@ A Chrome extension for efficiently managing, organizing, and cleaning up browser
   - Close all tabs with the same domain from all windows
 
 - **Google Docs Support**
-  - Automatically detects and labels Google Docs, Sheets, Slides, and Forms
+  - Automatically detects and labels Google Docs, Sheets, Slides, Forms, Vids, and Drawings
 
 - **Localization**
   - English

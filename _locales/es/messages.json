@@ -47,6 +47,10 @@
     "message": "Mover Dominio (Todas las Ventanas)",
     "description": "Button to move tabs from all windows"
   },
+  "moveUngroupedCurrentWindow": {
+    "message": "Mover No Agrupadas a Nueva Ventana",
+    "description": "Button to move ungrouped tabs from the current window to a new window"
+  },
   "bringToWindow": {
     "message": "Traer Todos a Esta Ventana",
     "description": "Button to bring all tabs to current window"

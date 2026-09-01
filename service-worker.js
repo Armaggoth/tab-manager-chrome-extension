@@ -50,6 +50,9 @@ async function handleMessage(request, sender, sendResponse) {
       case 'moveDomainAllWindows':
         await moveDomainAllWindows(settings, request.domain);
         break;
+      case 'moveUngroupedCurrentWindow':
+        await moveUngroupedCurrentWindow(settings);
+        break;
       case 'bringToWindow':
         await bringAllToCurrentWindow(settings);
         break;
@@ -92,8 +95,15 @@ function filterTabs(tabs, settings) {
     if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
       return false;
     }
-    // Filter out special URLs
-    if (!tab.url || tab.url.startsWith('chrome://')) return false;
+    if (!tab.url) return false;
+    return true;
+  });
+}
+
+function filterDomainActionTabs(tabs, settings) {
+  return tabs.filter((tab) => {
+    if (settings.ignorePinnedTabs && tab.pinned) return false;
+    if (!tab.url) return false;
     return true;
   });
 }
@@ -102,7 +112,7 @@ function filterUngroupedTabs(tabs, settings) {
   return tabs.filter((tab) => {
     if (settings.ignorePinnedTabs && tab.pinned) return false;
     if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) return false;
-    if (!tab.url || tab.url.startsWith('chrome://')) return false;
+    if (!tab.url) return false;
     return true;
   });
 }
@@ -114,9 +124,9 @@ function partitionTabsForGrouping(tabs, settings) {
   for (const tab of tabs) {
     const isPinned = settings.ignorePinnedTabs && tab.pinned;
     const isGrouped = tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE;
-    const isSpecialUrl = !tab.url || tab.url.startsWith('chrome://');
+    const isMissingUrl = !tab.url;
 
-    if (isPinned || isGrouped || isSpecialUrl) {
+    if (isPinned || isGrouped || isMissingUrl) {
       ungroupableTabs.push(tab);
       continue;
     }
@@ -368,30 +378,42 @@ async function removeDuplicates(settings) {
 
 // Move domain tabs from current window to new window
 async function moveDomainCurrentWindow(settings, domain) {
+  const targetMoveKey = await getTargetMoveKey(domain);
+  if (!targetMoveKey) return;
+
   const tabs = await queryTabs({ currentWindow: true });
-  const filtered = filterTabs(tabs, settings);
-  const matching = filtered.filter((tab) => extractDomain(tab.url) === domain);
+  const filtered = filterDomainActionTabs(tabs, settings);
+  const matching = filtered.filter((tab) => getMoveKey(tab.url) === targetMoveKey);
 
   if (matching.length === 0) return;
 
   const tabIds = matching.map((t) => t.id);
-  const newWindow = await chrome.windows.create({ tabIds });
-  // Close the original tabs if they moved successfully
-  await chrome.tabs.remove(tabIds);
+  await moveTabsToNewWindow(tabIds);
 }
 
 // Move domain tabs from all windows to new window
 async function moveDomainAllWindows(settings, domain) {
+  const targetMoveKey = await getTargetMoveKey(domain);
+  if (!targetMoveKey) return;
+
   const tabs = await queryTabs({});
-  const filtered = filterTabs(tabs, settings);
-  const matching = filtered.filter((tab) => extractDomain(tab.url) === domain);
+  const filtered = filterDomainActionTabs(tabs, settings);
+  const matching = filtered.filter((tab) => getMoveKey(tab.url) === targetMoveKey);
 
   if (matching.length === 0) return;
 
   const tabIds = matching.map((t) => t.id);
-  const newWindow = await chrome.windows.create({ tabIds });
-  // Close the original tabs if they moved successfully
-  await chrome.tabs.remove(tabIds);
+  await moveTabsToNewWindow(tabIds);
+}
+
+// Move all eligible ungrouped tabs from the current window to a new window
+async function moveUngroupedCurrentWindow(settings) {
+  const tabs = await queryTabs({ currentWindow: true });
+  const ungroupedTabs = filterTabs(tabs, settings);
+
+  if (ungroupedTabs.length === 0) return;
+
+  await moveTabsToNewWindow(ungroupedTabs.map((tab) => tab.id));
 }
 
 // Bring all tabs from other windows to current window
@@ -399,18 +421,34 @@ async function bringAllToCurrentWindow(settings) {
   const currentWindow = await chrome.windows.getCurrent();
   const allTabs = await queryTabs({});
   const otherWindowTabs = allTabs.filter((tab) => tab.windowId !== currentWindow.id);
+  const otherWindowPinnedTabs = otherWindowTabs.filter((tab) => tab.pinned);
+  const otherWindowUnpinnedTabs = otherWindowTabs.filter((tab) => !tab.pinned);
 
   if (otherWindowTabs.length === 0) return;
 
-  const tabIds = otherWindowTabs.map((t) => t.id);
-  await chrome.tabs.move(tabIds, { windowId: currentWindow.id, index: -1 });
+  if (otherWindowPinnedTabs.length > 0) {
+    const pinnedTabIds = otherWindowPinnedTabs.map((tab) => tab.id);
+    await moveTabs(pinnedTabIds, { windowId: currentWindow.id, index: -1 });
+
+    for (const tabId of pinnedTabIds) {
+      await updateTab(tabId, { pinned: true });
+    }
+  }
+
+  if (otherWindowUnpinnedTabs.length > 0) {
+    const unpinnedTabIds = otherWindowUnpinnedTabs.map((tab) => tab.id);
+    await moveTabs(unpinnedTabIds, { windowId: currentWindow.id, index: -1 });
+  }
 }
 
 // Close domain tabs in current window
 async function closeDomainCurrentWindow(settings, domain) {
+  const targetMoveKey = await getTargetMoveKey(domain);
+  if (!targetMoveKey) return;
+
   const tabs = await queryTabs({ currentWindow: true });
-  const filtered = filterTabs(tabs, settings);
-  const matching = filtered.filter((tab) => extractDomain(tab.url) === domain);
+  const filtered = filterDomainActionTabs(tabs, settings);
+  const matching = filtered.filter((tab) => getMoveKey(tab.url) === targetMoveKey);
 
   if (matching.length > 0) {
     const tabIds = matching.map((t) => t.id);
@@ -420,9 +458,12 @@ async function closeDomainCurrentWindow(settings, domain) {
 
 // Close domain tabs in all windows
 async function closeDomainAllWindows(settings, domain) {
+  const targetMoveKey = await getTargetMoveKey(domain);
+  if (!targetMoveKey) return;
+
   const tabs = await queryTabs({});
-  const filtered = filterTabs(tabs, settings);
-  const matching = filtered.filter((tab) => extractDomain(tab.url) === domain);
+  const filtered = filterDomainActionTabs(tabs, settings);
+  const matching = filtered.filter((tab) => getMoveKey(tab.url) === targetMoveKey);
 
   if (matching.length > 0) {
     const tabIds = matching.map((t) => t.id);
@@ -448,9 +489,51 @@ function queryTabs(queryInfo) {
   });
 }
 
+async function getActiveTabDomain() {
+  const [activeTab] = await queryTabs({ active: true, currentWindow: true });
+  return activeTab ? extractDomain(activeTab.url) : null;
+}
+
+async function getTargetMoveKey(domain) {
+  const [activeTab] = await queryTabs({ active: true, currentWindow: true });
+  if (activeTab) {
+    return getMoveKey(activeTab.url);
+  }
+
+  return domain || null;
+}
+
+function getMoveKey(url) {
+  return getGroupingKey(url, false);
+}
+
 function moveTabs(tabIds, moveProperties) {
   return new Promise((resolve) => {
     chrome.tabs.move(tabIds, moveProperties, (tabs) => resolve(tabs));
+  });
+}
+
+function updateTab(tabId, updateProperties) {
+  return new Promise((resolve) => {
+    chrome.tabs.update(tabId, updateProperties, (tab) => resolve(tab));
+  });
+}
+
+async function moveTabsToNewWindow(tabIds) {
+  if (tabIds.length === 0) return null;
+
+  const newWindow = await createWindowWithTab(tabIds[0]);
+  const remainingTabIds = tabIds.slice(1);
+  if (remainingTabIds.length > 0) {
+    await moveTabs(remainingTabIds, { windowId: newWindow.id, index: -1 });
+  }
+
+  return newWindow;
+}
+
+function createWindowWithTab(tabId) {
+  return new Promise((resolve) => {
+    chrome.windows.create({ tabId }, (window) => resolve(window));
   });
 }
 

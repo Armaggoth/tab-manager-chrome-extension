@@ -26,6 +26,14 @@ Remaining browser validation includes Remove Duplicates, the move and close oper
 
 ## Test Fixture
 
+For move-window testing, you can open a disposable Chrome profile with the extension loaded and two prepared windows:
+
+```text
+npm run test:chrome:move -- --reset
+```
+
+The script uses `.chrome-test-profile/`, which is ignored by Git. Omit `--reset` to reuse the same disposable profile.
+
 Create these tabs in **Window A**, in a deliberately mixed order:
 
 - `https://www.amazon.com/`
@@ -81,11 +89,14 @@ Use the **Sorting Debug** section above the action buttons when investigating so
 6. Capture the refreshed list as the after state.
 7. Click **Copy Tab List** and paste the result into the bug report.
 
+Use **Read All Windows** when validating move-window behavior. It lists tabs from every browser window and includes each tab's `Window ID`, making before/after window membership easier to compare.
+
 Expected:
 
 - Every current-window tab appears in both lists, including empty and special tabs.
 - **Scramble Tabs** randomizes pinned and unpinned tabs independently, while keeping pinned tabs in Chrome's pinned region.
 - Each row includes its position, extracted domain or a no-domain label, the URL, `Pinned: Yes` or `Pinned: No`, `Grouped: Yes` or `Grouped: No`, the group ID (or `Group ID: None` when ungrouped), and the group name (or `Group Name: None` when ungrouped).
+- **Read All Windows** rows also include the browser `Window ID` for each tab.
 - The after state reflects the actual browser tab order after sorting.
 - The debug view does not apply the pinned/grouped filtering settings.
 
@@ -96,7 +107,8 @@ Questions:
 3. Did every row include the correct pinned flag? **Yes/No**
 4. Did every row include the correct grouped flag, group ID, and group name? **Yes/No**
 5. Did the list refresh after clicking **Sort by Domain**? **Yes/No**
-6. Did **Copy Tab List** copy the complete visible list, including URLs, pinned flags, group IDs, and group names? **Yes/No**
+6. Did **Read All Windows** show tabs from every browser window with the correct Window ID? **Yes/No/Not tested**
+7. Did **Copy Tab List** copy the complete visible list, including URLs, pinned flags, group IDs, group names, and Window IDs when visible? **Yes/No**
 
 ## Test Cases
 
@@ -241,39 +253,73 @@ Questions:
 
 ### 7. Move Domain (Current Window)
 
-Reset the fixture. In Window A, click **Move Domain (Current Window)** and enter a domain present in Window A.
+Reset the fixture. In Window A, focus a tab whose domain appears more than once in Window A, then click **Move Domain (Current Window)**.
 
 Expected:
 
+- The active tab's domain is used automatically; no domain-selection prompt appears.
 - Matching tabs from Window A move to one new window.
+- For `docs.google.com`, only tabs matching the active Google editor type move. For example, an active Google Doc moves Google Docs tabs, not Sheets or Slides.
 - Matching tabs in Window B remain in Window B.
-- Excluded pinned or grouped tabs are not moved when their ignore setting is enabled.
-- A domain that does not exist produces no destructive change.
+- Grouped matching tabs move with the domain.
+- Pinned matching tabs are not moved when Ignore Pinned Tabs is enabled.
+- If the active tab has no usable domain, no destructive change occurs.
 
 Questions:
 
-1. Did the domain-selection prompt accept a valid domain? **Yes/No**
-2. Did only matching tabs from the current window move? **Yes/No**
-3. Were matching tabs in other windows left where they were? **Yes/No**
-4. Did canceling or entering an invalid domain leave tabs unchanged? **Yes/No/Not tested**
+1. Did the action run without a domain-selection prompt? **Yes/No**
+2. Was the active tab's domain used as the target domain? **Yes/No**
+3. Did only matching tabs from the current window move? **Yes/No**
+4. For Google editor tabs, did only the active editor type move? **Yes/No/Not tested**
+5. Were matching tabs in other windows left where they were? **Yes/No**
+6. Did grouped matching tabs move with the domain? **Yes/No/Not tested**
+7. Were ignored pinned matching tabs preserved? **Yes/No/Not applicable**
+8. Did focusing a tab without a usable domain leave tabs unchanged? **Yes/No/Not tested**
 
 ### 8. Move Domain (All Windows)
 
-Reset the fixture. In Window A, click **Move Domain (All Windows)** and enter a domain present in both windows.
+Reset the fixture. In Window A, focus a tab whose domain appears in multiple windows, then click **Move Domain (All Windows)**.
 
 Expected:
 
+- The active tab's domain is used automatically; no domain-selection prompt appears.
 - Matching tabs from all windows move to one new window.
+- For `docs.google.com`, only tabs matching the active Google editor type move across windows. For example, active Sheets moves Sheets tabs, not Docs or Slides.
 - Nonmatching tabs remain in their original windows.
-- Excluded pinned or grouped tabs are not moved when their ignore setting is enabled.
+- Grouped matching tabs move with the domain.
+- Pinned matching tabs are not moved when Ignore Pinned Tabs is enabled.
 
 Questions:
 
-1. Were matching tabs collected from all windows? **Yes/No**
-2. Were nonmatching tabs left unchanged? **Yes/No**
-3. Were excluded tabs preserved? **Yes/No/Not applicable**
+1. Did the action run without a domain-selection prompt? **Yes/No**
+2. Was the active tab's domain used as the target domain? **Yes/No**
+3. Were matching tabs collected from all windows? **Yes/No**
+4. For Google editor tabs, did only the active editor type move? **Yes/No/Not tested**
+5. Were nonmatching tabs left unchanged? **Yes/No**
+6. Did grouped matching tabs move with the domain? **Yes/No/Not tested**
+7. Were ignored pinned matching tabs preserved? **Yes/No/Not applicable**
 
-### 9. Bring All to This Window
+### 9. Move Ungrouped to New Window
+
+Reset the fixture with grouped and ungrouped tabs in Window A. Include at least one grouped tab, one regular ungrouped tab, one `chrome://` tab, and one pinned tab. Click **Move Ungrouped to New Window**.
+
+Expected:
+
+- Eligible ungrouped tabs from Window A move to one new window.
+- Already-grouped tabs remain in Window A.
+- Ungrouped `chrome://` tabs move like other ungrouped tabs.
+- Pinned tabs remain in Window A when Ignore Pinned Tabs is enabled.
+- Tabs in other windows are unchanged.
+
+Questions:
+
+1. Did eligible ungrouped tabs move to one new window? **Yes/No**
+2. Were grouped tabs preserved in the original window? **Yes/No**
+3. Did ungrouped `chrome://` tabs move with the other ungrouped tabs? **Yes/No/Not tested**
+4. Were ignored pinned tabs preserved? **Yes/No/Not applicable**
+5. Were tabs in other windows unchanged? **Yes/No/Not tested**
+
+### 10. Bring All to This Window
 
 Reset the fixture with tabs in Window A and Window B. Focus Window A and click **Bring All to This Window**.
 
@@ -281,50 +327,63 @@ Expected:
 
 - Tabs from other windows move into the current window.
 - Tabs already in the current window remain there.
+- Grouped tabs from other windows move and preserve their group assignments.
+- Pinned tabs from other windows move too, are handled separately from unpinned tabs, and are re-pinned in their original moved order regardless of the Ignore Pinned Tabs setting.
 - The operation does not close tabs.
 
 Questions:
 
 1. Did tabs from other windows move into the focused window? **Yes/No**
 2. Were all tabs preserved? **Yes/No**
-3. Did the operation behave the same with pinned/grouped settings enabled? **Yes/No/Not tested**
+3. Did grouped tabs move while preserving their group assignments? **Yes/No/Not tested**
+4. Did pinned tabs move, stay pinned, and keep their moved-tab order regardless of the Ignore Pinned Tabs setting? **Yes/No/Not tested**
 
-### 10. Close Domain (Current Window)
+### 11. Close Domain (Current Window)
 
-Reset the fixture. In Window A, click **Close Domain (Current Window)** and enter a domain present in Window A and Window B.
+Reset the fixture. In Window A, focus a tab whose domain appears in Window A and Window B, then click **Close Domain (Current Window)**.
 
 Expected:
 
-- A confirmation prompt appears.
+- The active tab's domain is used automatically; no domain-selection prompt appears.
+- A confirmation prompt appears naming the active tab's domain.
 - Confirming closes matching tabs only in Window A.
 - Canceling closes nothing.
 - Matching tabs in Window B remain open.
-- Excluded pinned or grouped tabs are preserved when their ignore settings are enabled.
+- Grouped matching tabs close with the domain.
+- Pinned matching tabs are preserved when Ignore Pinned Tabs is enabled.
 
 Questions:
 
-1. Did confirmation appear before closing? **Yes/No**
-2. Did confirming close only matching current-window tabs? **Yes/No**
-3. Did canceling preserve all tabs? **Yes/No/Not tested**
+1. Did the action skip the domain-selection prompt? **Yes/No**
+2. Did confirmation appear before closing and name the active tab's domain? **Yes/No**
+3. Did confirming close only matching current-window tabs? **Yes/No**
+4. Did grouped matching tabs close with the domain? **Yes/No/Not tested**
+5. Were ignored pinned matching tabs preserved? **Yes/No/Not applicable**
+6. Did canceling preserve all tabs? **Yes/No/Not tested**
 
-### 11. Close Domain (All Windows)
+### 12. Close Domain (All Windows)
 
-Reset the fixture. In Window A, click **Close Domain (All Windows)** and enter a domain present in multiple windows.
+Reset the fixture. In Window A, focus a tab whose domain appears in multiple windows, then click **Close Domain (All Windows)**.
 
 Expected:
 
-- A confirmation prompt appears.
+- The active tab's domain is used automatically; no domain-selection prompt appears.
+- A confirmation prompt appears naming the active tab's domain.
 - Confirming closes matching tabs in every window.
 - Canceling closes nothing.
-- Excluded pinned or grouped tabs are preserved when their ignore settings are enabled.
+- Grouped matching tabs close with the domain.
+- Pinned matching tabs are preserved when Ignore Pinned Tabs is enabled.
 
 Questions:
 
-1. Did confirmation appear before closing? **Yes/No**
-2. Were matching tabs closed across all windows? **Yes/No**
-3. Did canceling preserve all tabs? **Yes/No/Not tested**
+1. Did the action skip the domain-selection prompt? **Yes/No**
+2. Did confirmation appear before closing and name the active tab's domain? **Yes/No**
+3. Were matching tabs closed across all windows? **Yes/No**
+4. Did grouped matching tabs close with the domain? **Yes/No/Not tested**
+5. Were ignored pinned matching tabs preserved? **Yes/No/Not applicable**
+6. Did canceling preserve all tabs? **Yes/No/Not tested**
 
-### 12. Settings and Side-Panel Smoke Test
+### 13. Settings and Side-Panel Smoke Test
 
 Open Settings and test each setting at least once.
 

@@ -47,6 +47,10 @@
     "message": "Move Domain (All Windows)",
     "description": "Button to move tabs from all windows"
   },
+  "moveUngroupedCurrentWindow": {
+    "message": "Move Ungrouped to New Window",
+    "description": "Button to move ungrouped tabs from the current window to a new window"
+  },
   "bringToWindow": {
     "message": "Bring All to This Window",
     "description": "Button to bring all tabs to current window"

@@ -22,10 +22,12 @@ Chrome Tab/Window APIs
 ## Requirements to Enforce
 
 1. **Pinned Tabs**: Users can toggle `ignorePinnedTabs` in settings. Filter tabs before operations if enabled.
-2. **Grouped Tabs**: Normal operations must protect tabs that are already in a group. Grouped tabs are filtered out by `filterTabs()` and `filterUngroupedTabs()` across all standard operations (Sort, Group, Move, Close, Remove Duplicates). The only operations that affect grouped tabs are:
-   - **Ungroup**: explicitly dissolves all tab groups in the window.
-   - **Bring All to This Window**: moves all tabs from other windows into the current window (preserving their group assignments).
-   - **Find Media Playing**: can focus/highlight a tab even if it is inside a group.
+2. **Grouped Tabs**: Normal organization and cleanup operations must protect tabs that are already in a group. Grouped tabs are filtered out by `filterTabs()` and `filterUngroupedTabs()` across Sort, Group, Move Ungrouped, and Remove Duplicates. The operations that affect grouped tabs are:
+  - **Ungroup**: explicitly dissolves all tab groups in the window.
+  - **Move Domain (Current Window)** and **Move Domain (All Windows)**: move all matching same-domain tabs, including grouped tabs, to a new window.
+  - **Close Domain (Current Window)** and **Close Domain (All Windows)**: close all matching same-domain tabs, including grouped tabs, after confirmation.
+  - **Bring All to This Window**: moves all tabs from other windows into the current window, preserving pinned state and group assignments.
+  - **Find Media Playing**: can focus/highlight a tab even if it is inside a group.
 3. **Google Docs Detection**: URL path patterns to extract document type (doc/spreadsheet/presentation/form/video/drawing) from docs.google.com URLs.
 4. **Duplicate Google Docs Detection**: Users can toggle `detectDuplicateGoogleDocs` in settings. When enabled, the "Remove Duplicates" operation detects duplicate tabs of the same Google Docs/Sheets/Slides/Form by comparing document IDs, even if they're open on different pages or sheets.
 5. **Grouping Safety**: Grouping operations must be idempotent. Repeating the same operation must not create duplicate groups or move tabs that are already in the correct group. Preserve existing groups and create separate groups for ungrouped matches; do not merge groups during normal operations.
@@ -64,7 +66,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 ### Implemented Tab Operations
 
-The service worker implements the operations below. The side panel also exposes an explicit `groupGoogleDocsByType` action for Docs, Sheets, Slides, and Forms.
+The service worker implements the operations below. The side panel also exposes an explicit `groupGoogleDocsByType` action for Docs, Sheets, Slides, Forms, Vids, and Drawings.
 
 Each requires a message handler in service-worker.js:
 
@@ -73,12 +75,13 @@ Each requires a message handler in service-worker.js:
 3. **Group by Domain (No Subdomain)** – Group ungrouped tabs by base domain, with all `docs.google.com` editor types grouped together
 4. **Ungroup** – If grouping uses tab groups (later feature), ungroup them
 5. **Remove Duplicates** – Close duplicate tabs (same URL or same Google Docs ID if `detectDuplicateGoogleDocs` is enabled), keep one
-6. **Move Domain (Current Window)** → New Window – Select domain, move all matching tabs to new window
-7. **Move Domain (All Windows)** → New Window – Move matching tabs from all browser windows to new window
-8. **Bring All to This Window** – Move all tabs from other windows to current window
-9. **Close Domain (Current Window)** – Close all tabs matching selected domain in current window
-10. **Close Domain (All Windows)** – Close all matching tabs across all browser windows
-11. **Find Media Playing** – Find and focus the tab currently playing audio/video across all windows
+6. **Move Domain (Current Window)** → New Window – Use the active tab's domain and move all matching tabs, including grouped tabs, from the current window to a new window
+7. **Move Domain (All Windows)** → New Window – Use the active tab's domain and move all matching tabs, including grouped tabs, from all browser windows to a new window
+8. **Move Ungrouped to New Window** – Move eligible ungrouped tabs from the current window to a new window
+9. **Bring All to This Window** – Move all tabs from other windows to current window, preserving pinned state and groups
+10. **Close Domain (Current Window)** – Close all tabs matching the active tab's domain, including grouped tabs, in current window
+11. **Close Domain (All Windows)** – Close all tabs matching the active tab's domain, including grouped tabs, across all browser windows
+12. **Find Media Playing** – Find and focus the tab currently playing audio/video across all windows
 
 ## Accessibility Standards
 
@@ -135,7 +138,7 @@ When adding new UI: Use semantic HTML first, add `aria-label` or `aria-labelledb
 ## Common Gotchas
 
 - **Message Handlers**: Forgetting to implement a case in the `onMessage` listener will silently fail. Check the console for missing handlers.
-- **Domain Extraction**: URLs without a valid domain (data: URLs, blob: URLs, chrome:// URLs) return null from `extractDomain()`. Filter these before operations.
+- **Domain Extraction**: URLs without a usable domain or URL label (for example, empty URLs) return null from `extractDomain()`. `chrome://` tabs expose labels such as `extensions` and `newtab` and should be treated like regular tabs where Chrome APIs allow it.
 - **Pinned Tabs**: Always check `settings.ignorePinnedTabs` before operating on tabs.
 - **Grouped Tabs**: Normal operations protect tabs already in a group. Use `tab.groupId` to detect grouped tabs (`groupId !== chrome.tabs.TAB_GROUP_ID_NONE`).
 - **Window Context**: `chrome.tabs.query({ currentWindow: true })` = tabs in active window. `chrome.tabs.query({})` = all tabs across all windows.

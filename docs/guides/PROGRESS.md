@@ -6,7 +6,7 @@
 
 **Scaffolding & Setup**
 - Manifest v3 configuration
-- Side panel UI with all 12 action buttons (full HTML/CSS/JS)
+- Side panel UI with all 13 action buttons (full HTML/CSS/JS)
 - Options page (settings: ignore pinned tabs, language)
 - Service worker with utility functions (`extractDomain`, `detectGoogleDocsType`)
 - Localization files (English & Spanish)
@@ -25,7 +25,7 @@
 
 ### Completed (Chat #3 - 2026-06-04)
 
-**Core Logic Implementation - All 11 Service Worker Message Handlers**
+**Core Logic Implementation - All 12 Service Worker Message Handlers**
 - Implemented `chrome.runtime.onMessage.addListener()` in service-worker.js
 - Sort tabs by domain
 - Group tabs by domain (with ignoreSubdomain option)
@@ -33,6 +33,7 @@
 - Remove duplicate tabs (with detectDuplicateGoogleDocs support)
 - Move domain tabs (current window) -> new window
 - Move domain tabs (all windows) -> new window
+- Move ungrouped current-window tabs -> new window
 - Bring all tabs to current window
 - Close domain tabs (current window)
 - Close domain tabs (all windows)
@@ -43,7 +44,7 @@
 ## Testing & Manual Validation
 
 - [ ] Execute the detailed [Manual Test Plan](MANUAL-TEST-PLAN.md) by settings profile and feature
-- [x] Add and pass unit tests for Sort by Domain and Remove Duplicates
+- [x] Add and pass unit tests for Sort by Domain, Remove Duplicates, and Move Ungrouped to New Window
 - [ ] Test each remaining operation in Chrome locally
 - [x] Test Sort by Domain in Chrome with Ignore Pinned Tabs checked and unchecked
 - [x] Test Group by Domain in Chrome, including repeated-click idempotency
@@ -59,16 +60,20 @@
 ## Supporting Tasks
 
 - [x] Do not create groups with a single tab; skip singleton group buckets to avoid noisy UX
-- [ ] Add a future feature to move all ungrouped tabs to a new browser window
+- [x] Add a feature to move all ungrouped tabs in the current window to a new browser window
 - [ ] Improve domain selection UI (currently uses `prompt()`)
 - [x] Add icon assets to `/assets/` (16x16, 48x48, 128x128 transparent PNG)
 - [ ] Add error handling/user feedback (toast messages)
+- [ ] Plan and implement Extract Tabs-style interface with user-selectable popup or side-panel mode
+- [ ] Add settings to choose which actions appear in popup mode and side-panel mode
+- [ ] Add Operations, Stats, Settings, and About views with active-domain counts and current/all-window action rows
+- [ ] Complete About view with version, privacy, permissions, documentation, feedback, and changelog details
 - [ ] Build and package for distribution
 - [ ] Evaluate local Playwright automation to reduce manual extension reloads
 
 ## Completed Grouping Safety Change
 
-Grouped tabs are protected across all standard operations (Sort, Group, Move, Close, Remove Duplicates). The former `ignoreGroupedTabs` setting was removed because making protection optional was unsafe:
+Grouped tabs are protected across standard organization operations and broad cleanup operations (Sort, Group, Move Ungrouped, Remove Duplicates). Domain move and close actions are explicit exceptions: they affect all same-domain tabs, including grouped tabs, to match the expected one-click domain extraction behavior. The former `ignoreGroupedTabs` setting was removed because making protection optional was unsafe:
 
 1. [x] Separate grouped tabs from ungrouped tabs for normal sorting and grouping.
 2. [x] Leave grouped tabs in their existing groups and positions.
@@ -79,7 +84,7 @@ Grouped tabs are protected across all standard operations (Sort, Group, Move, Cl
 7. Reserve changes to existing groups for a future, explicitly named `Regroup All Tabs` action.
 8. [x] Add unit tests for grouped-tab protection and repeated grouping before manual Chrome tests.
 
-Grouped-tab protection is now unconditional for operations that use `filterTabs()` / `filterUngroupedTabs()`. Standard operations never dissolve or alter existing groups.
+Grouped-tab protection is now unconditional for operations that use `filterTabs()` / `filterUngroupedTabs()`. Domain move and close actions use a domain-action filter so grouped same-domain tabs can be handled intentionally.
 
 ## Advanced Features
 
