@@ -11,6 +11,7 @@ let currentTabs = [];
 let settings = {};
 let messageHandler;
 let moveCalls = [];
+let removeCalls = [];
 let groups = [];
 let groupCalls = [];
 
@@ -36,6 +37,13 @@ globalThis.chrome = {
       remainingTabs.splice(moveProperties.index, 0, ...movedTabs);
       currentTabs = remainingTabs;
       callback(movedTabs);
+    },
+    remove: (tabIds, callback) => {
+      const ids = new Set(Array.isArray(tabIds) ? tabIds : [tabIds]);
+      removeCalls.push(Array.from(ids));
+      currentTabs = currentTabs.filter((tab) => !ids.has(tab.id));
+      if (typeof callback === 'function') callback();
+      return Promise.resolve();
     },
   },
   storage: {
@@ -82,8 +90,20 @@ function runSort(tabs, activeSettings = {}) {
   settings = activeSettings;
   moveCalls = [];
   groupCalls = [];
+  removeCalls = [];
   return new Promise((resolve) => {
     messageHandler({ action: 'sortByDomain' }, {}, resolve);
+  });
+}
+
+function runRemoveDuplicates(tabs, activeSettings = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  removeCalls = [];
+  return new Promise((resolve) => {
+    messageHandler({ action: 'removeDuplicates' }, {}, resolve);
   });
 }
 
@@ -103,7 +123,7 @@ test('sorts tabs alphabetically by hostname', { concurrency: false }, async () =
   assert.deepEqual(moveCalls[0].tabIds, [3, 2, 1]);
 });
 
-test('protects existing groups and creates a separate group for ungrouped matches', { concurrency: false }, async () => {
+test('protects existing groups and leaves singleton buckets ungrouped', { concurrency: false }, async () => {
   currentTabs = [
     createTab(1, 'https://google.com/old', { groupId: 10 }),
     createTab(2, 'https://google.com/new'),
@@ -120,13 +140,74 @@ test('protects existing groups and creates a separate group for ungrouped matche
 
   await runGroup();
   assert.equal(currentTabs.find((tab) => tab.id === 1).groupId, 10);
-  assert.notEqual(currentTabs.find((tab) => tab.id === 2).groupId, 10);
+  assert.equal(currentTabs.find((tab) => tab.id === 2).groupId, -1);
+  assert.equal(currentTabs.find((tab) => tab.id === 3).groupId, -1);
   assert.equal(groupCalls.filter((call) => call.groupId === 10).length, 0);
 
   const callsAfterFirstRun = groupCalls.length;
   await runGroup();
   assert.equal(groupCalls.length, callsAfterFirstRun);
-  assert.equal(groups.filter((group) => group.title === 'google.com').length, 2);
+  assert.equal(groups.filter((group) => group.title === 'google.com').length, 1);
+});
+
+test('does not create a group when a domain bucket contains only one eligible tab', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://solo.example/'),
+    createTab(2, 'https://shared.example/one'),
+    createTab(3, 'https://shared.example/two'),
+  ];
+  groups = [];
+  groupCalls = [];
+
+  await new Promise((resolve) => {
+    messageHandler({ action: 'groupByDomain', ignoreSubdomain: false }, {}, resolve);
+  });
+
+  assert.deepEqual(
+    groupCalls.map((call) => call.tabIds.sort((a, b) => a - b)),
+    [[2, 3]]
+  );
+  assert.equal(groups.filter((group) => group.title === 'shared.example').length, 1);
+  assert.equal(groups.find((group) => group.title === 'shared.example').collapsed, true);
+});
+
+test('moves ungrouped tabs to the right after grouping', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://alpha.example/'),
+    createTab(2, 'https://shared.example/one'),
+    createTab(3, 'https://shared.example/two'),
+    createTab(4, 'https://beta.example/'),
+  ];
+  groups = [];
+  groupCalls = [];
+  moveCalls = [];
+
+  await new Promise((resolve) => {
+    messageHandler({ action: 'groupByDomain', ignoreSubdomain: false }, {}, resolve);
+  });
+
+  assert.deepEqual(tabIds(), [2, 3, 1, 4]);
+});
+
+test('does not create a Google Docs group when a document type bucket has only one eligible tab', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://docs.google.com/document/d/solo-doc/edit'),
+    createTab(2, 'https://docs.google.com/spreadsheets/d/group-sheet-a/edit'),
+    createTab(3, 'https://docs.google.com/spreadsheets/d/group-sheet-b/edit'),
+  ];
+  groups = [];
+  groupCalls = [];
+
+  await new Promise((resolve) => {
+    messageHandler({ action: 'groupGoogleDocsByType' }, {}, resolve);
+  });
+
+  assert.deepEqual(
+    groupCalls.map((call) => call.tabIds.sort((a, b) => a - b)),
+    [[2, 3]]
+  );
+  assert.equal(groups.filter((group) => group.title === 'Google Sheets').length, 1);
+  assert.equal(groups.find((group) => group.title === 'Google Sheets').collapsed, true);
 });
 
 test('sorts by first domain part after removing www', { concurrency: false }, async () => {
@@ -296,4 +377,57 @@ test('protects grouped tabs during sorting regardless of the setting', { concurr
     currentTabs.filter((tab) => tab.groupId === -1).map((tab) => tab.id),
     [2, 3]
   );
+});
+
+test('removeDuplicates removes exact duplicate URLs and keeps first instance', { concurrency: false }, async () => {
+  await runRemoveDuplicates([
+    createTab(1, 'https://example.com/page1'),
+    createTab(2, 'https://example.com/page2'),
+    createTab(3, 'https://example.com/page1'),
+  ]);
+
+  assert.deepEqual(tabIds(), [1, 2]);
+  assert.deepEqual(removeCalls, [[3]]);
+});
+
+test('removeDuplicates detects duplicate Google Docs by document ID when setting enabled', { concurrency: false }, async () => {
+  const doc1 = 'https://docs.google.com/document/d/12345/edit?tab=t.0';
+  const doc1AnotherTab = 'https://docs.google.com/document/d/12345/edit?tab=t.1';
+  const doc2 = 'https://docs.google.com/document/d/67890/edit';
+
+  await runRemoveDuplicates([
+    createTab(1, doc1),
+    createTab(2, doc2),
+    createTab(3, doc1AnotherTab),
+  ], { detectDuplicateGoogleDocs: true });
+
+  assert.deepEqual(tabIds(), [1, 2]);
+  assert.deepEqual(removeCalls, [[3]]);
+});
+
+test('removeDuplicates treats different Google Docs URLs as separate when setting disabled', { concurrency: false }, async () => {
+  const doc1 = 'https://docs.google.com/document/d/12345/edit?tab=t.0';
+  const doc1AnotherTab = 'https://docs.google.com/document/d/12345/edit?tab=t.1';
+
+  await runRemoveDuplicates([
+    createTab(1, doc1),
+    createTab(2, doc1AnotherTab),
+  ], { detectDuplicateGoogleDocs: false });
+
+  assert.deepEqual(tabIds(), [1, 2]);
+  assert.deepEqual(removeCalls, []);
+});
+
+test('removeDuplicates respects ignorePinnedTabs and protects grouped tabs', { concurrency: false }, async () => {
+  await runRemoveDuplicates([
+    createTab(1, 'https://example.com/page1', { pinned: true }),
+    createTab(2, 'https://example.com/page1'),
+    createTab(3, 'https://example.com/page2', { groupId: 5 }),
+    createTab(4, 'https://example.com/page2'),
+  ], { ignorePinnedTabs: true });
+
+  // Tab 1 is pinned & ignored -> skipped by filter. Tab 2 is first seen unpinned.
+  // Tab 3 is grouped -> skipped by filter. Tab 4 is first seen unpinned for page2.
+  assert.deepEqual(tabIds(), [1, 2, 3, 4]);
+  assert.deepEqual(removeCalls, []);
 });

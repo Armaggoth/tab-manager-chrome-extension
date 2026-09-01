@@ -10,7 +10,19 @@ Run the unit tests from the repository root with:
 npm test
 ```
 
-The current suite covers **Sort by Domain** through the service-worker message path, including alphabetical ordering, repeated-click stability with an interleaved special URL, and pinned/grouped-tab exclusions. Add unit tests for each subsequent feature before or alongside its manual validation.
+The current suite covers **Sort by Domain**, **Group by Domain**, and **Remove Duplicates** (including Google Docs ID duplicate detection, exact URL duplicate removal, and pinned/grouped protections) through the service-worker message path. Add unit tests for each subsequent feature before or alongside its manual validation.
+
+## Current Validation Status
+
+The following features have passed manual Chrome validation:
+
+- Sort by Domain with Ignore Pinned Tabs checked and unchecked
+- Group by Domain, including repeated-click idempotency
+- Group by Domain (No Subdomain)
+- Ungroup
+- Google editor type grouping/sorting for Docs, Sheets, Slides, and Forms
+
+Remaining browser validation includes Remove Duplicates, the move and close operations, Find Media Playing, and Google Vids/Drawings coverage.
 
 ## Test Fixture
 

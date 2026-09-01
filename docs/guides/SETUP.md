@@ -55,7 +55,7 @@ Follow the [Manual Test Plan](MANUAL-TEST-PLAN.md) and record failures by settin
 
 ## Step 5: Icon Assets
 
-Create or add icons to `/assets/`:
+The current icon assets are already available in `/assets/`:
 - `icon-16.png` (16x16)
 - `icon-48.png` (48x48)
 - `icon-128.png` (128x128)

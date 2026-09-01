@@ -43,10 +43,14 @@
 ## Testing & Manual Validation
 
 - [ ] Execute the detailed [Manual Test Plan](MANUAL-TEST-PLAN.md) by settings profile and feature
-- [x] Add and pass unit tests for Sort by Domain
-- [ ] Test each operation in Chrome locally
+- [x] Add and pass unit tests for Sort by Domain and Remove Duplicates
+- [ ] Test each remaining operation in Chrome locally
+- [x] Test Sort by Domain in Chrome with Ignore Pinned Tabs checked and unchecked
+- [x] Test Group by Domain in Chrome, including repeated-click idempotency
+- [x] Test Group by Domain (No Subdomain) in Chrome
 - [x] Test Ungroup in Chrome locally
-- [ ] Verify filtering (pinned tabs, grouped tabs) works correctly
+- [x] Verify pinned-tab filtering and grouped-tab protection for tested operations
+- [x] Test Remove Duplicates in Chrome locally
 - [ ] Test Google Docs duplicate detection
 - [ ] Verify move/close operations work across multiple windows
 - [ ] Test media finding functionality
@@ -54,15 +58,17 @@
 
 ## Supporting Tasks
 
+- [x] Do not create groups with a single tab; skip singleton group buckets to avoid noisy UX
+- [ ] Add a future feature to move all ungrouped tabs to a new browser window
 - [ ] Improve domain selection UI (currently uses `prompt()`)
-- [ ] Add icon assets to `/assets/` (16x16, 48x48, 128x128 PNG)
+- [x] Add icon assets to `/assets/` (16x16, 48x48, 128x128 transparent PNG)
 - [ ] Add error handling/user feedback (toast messages)
 - [ ] Build and package for distribution
 - [ ] Evaluate local Playwright automation to reduce manual extension reloads
 
 ## Completed Grouping Safety Change
 
-Normal sorting and grouping now treat existing tab groups as user-owned organization. The former `ignoreGroupedTabs` setting was removed because making protection optional was unsafe:
+Grouped tabs are protected across all standard operations (Sort, Group, Move, Close, Remove Duplicates). The former `ignoreGroupedTabs` setting was removed because making protection optional was unsafe:
 
 1. [x] Separate grouped tabs from ungrouped tabs for normal sorting and grouping.
 2. [x] Leave grouped tabs in their existing groups and positions.
@@ -73,7 +79,7 @@ Normal sorting and grouping now treat existing tab groups as user-owned organiza
 7. Reserve changes to existing groups for a future, explicitly named `Regroup All Tabs` action.
 8. [x] Add unit tests for grouped-tab protection and repeated grouping before manual Chrome tests.
 
-Grouped-tab protection is now unconditional for operations that use the shared filter. Normal grouping does not merge ungrouped tabs into existing groups.
+Grouped-tab protection is now unconditional for operations that use `filterTabs()` / `filterUngroupedTabs()`. Standard operations never dissolve or alter existing groups.
 
 ## Advanced Features
 
@@ -103,7 +109,8 @@ Grouped-tab protection is now unconditional for operations that use the shared f
 - [x] Apply editor-type grouping to **Group by Domain** while keeping **Group by Domain (No Subdomain)** as one Google group
 - [x] Sort unsupported Google editor paths alphabetically by a dynamic path identifier
 - [x] Preserve the existing domain-grouping behavior
-- [ ] Validate grouping and type sorting with Docs, Sheets, Slides, Forms, Vids, and Drawings in Chrome (Docs, Sheets, Slides, and Forms sorting passed; Vids/Drawings remain)
+- [x] Validate grouping and type sorting with Docs, Sheets, Slides, and Forms in Chrome
+- [ ] Validate grouping and type sorting with Google Vids and Drawings in Chrome
 
 ### Future UX Task: Revisit Tab List Utility
 

@@ -68,3 +68,10 @@ Record the date, test setup, and result here after each fix. Do not mark a bug c
 - **Fixture**: 36 tabs with grouped and ungrouped tabs
 - **Result**: Passed. Grouped tabs were ungrouped, all rows reported `Group ID: None` and `Group Name: None`, special tabs remained present, and the tab count was unchanged.
 - **Pinned tabs**: The six pinned tabs remained present and retained their pinned status.
+
+## Successful Validation: Remove Duplicates
+
+- **Feature**: Remove Duplicates
+- **Fixture**: 36 tabs (6 pinned, 30 unpinned) with multiple exact URL duplicate sets (cawallpaper, aistudio, notebook, duolingo, microsoft)
+- **Settings**: Ignore Pinned Tabs checked, Detect Duplicate Google Docs checked
+- **Result**: Passed. Exactly 9 duplicate tabs were closed (reducing total tabs from 36 to 27). First instances were kept. Pinned tabs (1–6) were completely protected. URLs with different query params (e.g. Amazon cart URLs) were kept separate as expected.

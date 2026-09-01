@@ -22,7 +22,10 @@ Chrome Tab/Window APIs
 ## Requirements to Enforce
 
 1. **Pinned Tabs**: Users can toggle `ignorePinnedTabs` in settings. Filter tabs before operations if enabled.
-2. **Grouped Tabs**: Normal sorting and grouping operations must always protect tabs that are already in a group. Any operation that changes existing groups must be a separate, explicitly named action.
+2. **Grouped Tabs**: Normal operations must protect tabs that are already in a group. Grouped tabs are filtered out by `filterTabs()` and `filterUngroupedTabs()` across all standard operations (Sort, Group, Move, Close, Remove Duplicates). The only operations that affect grouped tabs are:
+   - **Ungroup**: explicitly dissolves all tab groups in the window.
+   - **Bring All to This Window**: moves all tabs from other windows into the current window (preserving their group assignments).
+   - **Find Media Playing**: can focus/highlight a tab even if it is inside a group.
 3. **Google Docs Detection**: URL path patterns to extract document type (doc/spreadsheet/presentation/form/video/drawing) from docs.google.com URLs.
 4. **Duplicate Google Docs Detection**: Users can toggle `detectDuplicateGoogleDocs` in settings. When enabled, the "Remove Duplicates" operation detects duplicate tabs of the same Google Docs/Sheets/Slides/Form by comparing document IDs, even if they're open on different pages or sheets.
 5. **Grouping Safety**: Grouping operations must be idempotent. Repeating the same operation must not create duplicate groups or move tabs that are already in the correct group. Preserve existing groups and create separate groups for ungrouped matches; do not merge groups during normal operations.

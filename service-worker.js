@@ -107,6 +107,26 @@ function filterUngroupedTabs(tabs, settings) {
   });
 }
 
+function partitionTabsForGrouping(tabs, settings) {
+  const groupableTabs = [];
+  const ungroupableTabs = [];
+
+  for (const tab of tabs) {
+    const isPinned = settings.ignorePinnedTabs && tab.pinned;
+    const isGrouped = tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE;
+    const isSpecialUrl = !tab.url || tab.url.startsWith('chrome://');
+
+    if (isPinned || isGrouped || isSpecialUrl) {
+      ungroupableTabs.push(tab);
+      continue;
+    }
+
+    groupableTabs.push(tab);
+  }
+
+  return { groupableTabs, ungroupableTabs };
+}
+
 // Sort tabs by domain in current window
 async function sortByDomain(settings) {
   const tabs = await queryTabs({ currentWindow: true });
@@ -207,11 +227,12 @@ function shuffleTabs(tabs) {
 // Group tabs by domain
 async function groupByDomain(settings, ignoreSubdomain = false) {
   const tabs = await queryTabs({ currentWindow: true });
-  const filtered = filterUngroupedTabs(tabs, settings);
+  const { groupableTabs, ungroupableTabs } = partitionTabsForGrouping(tabs, settings);
+  const groupedIds = new Set();
 
   // Group tabs by domain
   const groups = new Map();
-  filtered.forEach((tab) => {
+  groupableTabs.forEach((tab) => {
     const groupingKey = getGroupingKey(tab.url, ignoreSubdomain);
     if (!groups.has(groupingKey)) {
       groups.set(groupingKey, []);
@@ -220,19 +241,32 @@ async function groupByDomain(settings, ignoreSubdomain = false) {
   });
 
   for (const [groupingKey, domainTabs] of groups) {
+    if (domainTabs.length < 2) continue;
+
     const tabIds = domainTabs.map((t) => t.id);
+    tabIds.forEach((tabId) => groupedIds.add(tabId));
     const group = await groupTabs(tabIds);
-    await updateTabGroup(group, { title: getGroupingLabel(domainTabs[0].url, ignoreSubdomain) });
+    await updateTabGroup(group, {
+      title: getGroupingLabel(domainTabs[0].url, ignoreSubdomain),
+      collapsed: true,
+    });
   }
+
+  if (groupedIds.size > 0) {
+    await moveUngroupedTabsRight(groupedIds, settings);
+  }
+
+  return { groupableTabs, ungroupableTabs, groupedIds };
 }
 
 // Group recognized Google editor tabs by document type
 async function groupGoogleDocsByType(settings) {
   const tabs = await queryTabs({ currentWindow: true });
-  const filtered = filterUngroupedTabs(tabs, settings);
+  const { groupableTabs, ungroupableTabs } = partitionTabsForGrouping(tabs, settings);
   const groups = new Map();
+  const groupedIds = new Set();
 
-  filtered.forEach((tab) => {
+  groupableTabs.forEach((tab) => {
     const type = detectGoogleDocsType(tab.url);
     if (!type || type === 'unknown') return;
 
@@ -247,10 +281,47 @@ async function groupGoogleDocsByType(settings) {
   );
 
   for (const [type, documentTabs] of sortedGroups) {
+    if (documentTabs.length < 2) continue;
+
     const tabIds = documentTabs.map((tab) => tab.id);
+    tabIds.forEach((tabId) => groupedIds.add(tabId));
     const title = getGoogleDocsTypeLabel(type);
     const group = await groupTabs(tabIds);
-    await updateTabGroup(group, { title });
+    await updateTabGroup(group, { title, collapsed: true });
+  }
+
+  if (groupedIds.size > 0) {
+    await moveUngroupedTabsRight(groupedIds, settings);
+  }
+
+  return { groupableTabs, ungroupableTabs, groupedIds };
+}
+
+async function moveUngroupedTabsRight(groupedIds, settings = {}) {
+  const currentWindowTabs = await queryTabs({ currentWindow: true });
+  const { ungroupableTabs } = partitionTabsForGrouping(currentWindowTabs, settings);
+  const ungroupedIds = currentWindowTabs
+    .filter((tab) => !groupedIds.has(tab.id) && !ungroupableTabs.some((groupedTab) => groupedTab.id === tab.id))
+    .map((tab) => tab.id);
+
+  if (ungroupedIds.length === 0) return;
+
+  const windowId = currentWindowTabs[0]?.windowId;
+  let targetIndex = currentWindowTabs.length - 1;
+  const workingTabs = [...currentWindowTabs];
+
+  for (let index = ungroupedIds.length - 1; index >= 0; index--) {
+    const tabId = ungroupedIds[index];
+    const currentIndex = workingTabs.findIndex((tab) => tab.id === tabId);
+    if (currentIndex === targetIndex) {
+      targetIndex -= 1;
+      continue;
+    }
+
+    await moveTabs([tabId], { index: targetIndex, windowId });
+    const [movedTab] = workingTabs.splice(currentIndex, 1);
+    workingTabs.splice(targetIndex, 0, movedTab);
+    targetIndex -= 1;
   }
 }
 
