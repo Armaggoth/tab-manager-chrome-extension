@@ -78,8 +78,8 @@ function getSettings() {
   return new Promise((resolve) => {
     chrome.storage.sync.get(
       {
-        ignorePinnedTabs: false,
-        detectDuplicateGoogleDocs: false,
+        ignorePinnedTabs: true,
+        detectDuplicateGoogleDocs: true,
       },
       (items) => {
         resolve(items);

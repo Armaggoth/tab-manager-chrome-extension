@@ -67,6 +67,7 @@
 - [ ] Plan and implement Extract Tabs-style interface with user-selectable popup or side-panel mode
 - [ ] Add settings to choose which actions appear in popup mode and side-panel mode
 - [ ] Add Operations, Stats, Settings, and About views with active-domain counts and current/all-window action rows
+- [ ] Add configurable toolbar badge showing how many windows would be affected by the active action/domain context
 - [ ] Complete About view with version, privacy, permissions, documentation, feedback, and changelog details
 - [ ] Build and package for distribution
 - [ ] Evaluate local Playwright automation to reduce manual extension reloads

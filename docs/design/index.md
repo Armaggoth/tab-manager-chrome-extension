@@ -52,7 +52,7 @@ Adopt a compact action interface similar to **Extract Tabs - Domain**, while kee
 	- Keep current behavior settings, including Ignore Pinned Tabs and Detect Duplicate Google Docs.
 	- Add interface launch mode: Popup or Side Panel.
 	- Add per-mode action visibility controls for popup and side panel.
-	- Add any future badge settings if badge counters are implemented.
+	- Add badge settings for color, scope, and whether the badge shows affected-window counts.
 - About view:
 	- Show extension name, version from `manifest.json`, and a one-sentence purpose statement.
 	- Show a short local-first privacy note: tab data is read only to perform requested actions and is not sent to external services.
@@ -69,8 +69,23 @@ Adopt a compact action interface similar to **Extract Tabs - Domain**, while kee
 - Active-window matching count and total active-window tab count.
 - All-window matching count and total tab count.
 - Total window count.
+- Affected-window count for the current active tab context.
 - Current settings and visible action configuration.
 - Optional stats data: top domains, duplicates, oldest tab, audible tabs, discarded tabs.
+
+**Toolbar badge plan**:
+- Show a badge on the extension action icon that indicates how many browser windows would be affected by the current active tab context.
+- Match Chrome's native action badge treatment: a small colored rounded rectangle over the lower-right corner of the extension icon in the toolbar/taskbar area.
+- Do not draw a custom badge inside the popup or side panel as the primary signal; use `chrome.action.setBadgeText()` and `chrome.action.setBadgeBackgroundColor()` for the icon badge.
+- For active-window actions, the badge should be `1` when the current window has at least one matching actionable tab and blank when no action would apply.
+- For all-window actions, the badge should count distinct windows containing matching actionable tabs.
+- For Google editor tabs, use the same Google editor type key as move/close actions, so a Google Sheet badge counts windows with matching Sheets, not all `docs.google.com` tabs.
+- Respect the same operation semantics used by the action being counted: domain move/close counts grouped tabs, Move Ungrouped counts only ungrouped tabs, and Bring All counts other windows.
+- Keep badge text short because Chrome badges are tiny; show numeric text such as `1`, `2`, `9+`, and clear the badge when the count is zero.
+- Store badge preferences in `chrome.storage.sync`, including `badgeEnabled`, `badgeColor`, and `badgeScope`.
+- Badge scope options should include Active window and All windows. A later enhancement can add Current selected action if the UI exposes an explicit active action state.
+- Update badge values when tabs are activated, updated, moved, removed, grouped, ungrouped, windows are created/removed, or relevant settings change.
+- Treat badge counts as advisory UI only; button clicks must still recompute actual tabs before moving or closing.
 
 **Side panel layout**:
 - Reuse the same action sections and components as the popup.
@@ -91,12 +106,13 @@ Adopt a compact action interface similar to **Extract Tabs - Domain**, while kee
 4. Add an interface-mode setting in the options page.
 5. Add per-display-mode action visibility settings in the options page.
 6. Add a read-only stats/context message in the service worker for active domain/type, counts, totals, and top-level stats.
-7. Implement the Operations view first because it maps directly to validated behavior.
-8. Implement Stats, Settings, and About as separate views after Operations is stable.
-9. When side-panel mode is selected, configure action click behavior to open the side panel and avoid showing the popup as the main path.
-10. When popup mode is selected, use the popup as the primary action surface and keep a button/link to open the side panel for expanded workflows.
-11. Keep all action behavior behind the existing service-worker message API so UI mode changes do not fork business logic.
-12. Add unit or DOM smoke tests once the UI is split; manual Chrome validation must cover both launch modes, contextual counts, settings persistence, and hidden-action restoration.
+7. Add badge calculation helpers and action-icon badge updates using the same context/matching functions as the UI stats.
+8. Implement the Operations view first because it maps directly to validated behavior.
+9. Implement Stats, Settings, and About as separate views after Operations is stable.
+10. When side-panel mode is selected, configure action click behavior to open the side panel and avoid showing the popup as the main path.
+11. When popup mode is selected, use the popup as the primary action surface and keep a button/link to open the side panel for expanded workflows.
+12. Keep all action behavior behind the existing service-worker message API so UI mode changes do not fork business logic.
+13. Add unit or DOM smoke tests once the UI is split; manual Chrome validation must cover both launch modes, contextual counts, badge counts, settings persistence, and hidden-action restoration.
 
 **Constraints**:
 - Do not change tab-operation semantics as part of this UI redesign.

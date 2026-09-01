@@ -6,8 +6,8 @@ const resetBtn = document.getElementById('reset-btn');
 const statusMessage = document.getElementById('status');
 
 const DEFAULTS = {
-  ignorePinnedTabs: false,
-  detectDuplicateGoogleDocs: false,
+  ignorePinnedTabs: true,
+  detectDuplicateGoogleDocs: true,
   language: 'en',
 };
 
