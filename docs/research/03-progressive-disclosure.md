@@ -213,7 +213,7 @@ Quick Actions (Always Visible):
 - Group by Domain (prominent button)
 - [More Options] button
 
-Click [More Options] → Modal opens with all 12 operations organized
+Click [More Options] → Modal opens with all 14 operations organized
 ```
 
 ---

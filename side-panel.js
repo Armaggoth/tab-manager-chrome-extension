@@ -1,29 +1,31 @@
 // Side panel UI logic
 import { extractDomain } from './utils.js';
+import {
+  getActionButtons,
+  initActionButtons,
+  initAffectedTabCounts,
+  initPinnedTabsCue,
+  initUsageSuggestion,
+  renderConfiguredActionGroups,
+} from './panel-actions.js';
 
-// Get all buttons
-const buttons = {
-  sortByDomain: document.getElementById('sort-by-domain'),
-  groupByDomain: document.getElementById('group-by-domain'),
-  groupByDomainIgnoreSubdomain: document.getElementById('group-by-domain-ignore-subdomain'),
-  groupGoogleDocsByType: document.getElementById('group-google-docs-by-type'),
-  ungroup: document.getElementById('ungroup'),
-  removeDuplicates: document.getElementById('remove-duplicates'),
-  moveDomainCurrentWindow: document.getElementById('move-domain-current-window'),
-  moveDomainAllWindows: document.getElementById('move-domain-all-windows'),
-  moveUngroupedCurrentWindow: document.getElementById('move-ungrouped-current-window'),
-  bringToWindow: document.getElementById('bring-to-window'),
-  closeDomainCurrentWindow: document.getElementById('close-domain-current-window'),
-  closeDomainAllWindows: document.getElementById('close-domain-all-windows'),
+await renderConfiguredActionGroups(document.getElementById('actions-grid'));
+
+const buttons = getActionButtons({
   settings: document.getElementById('settings-btn'),
   scrambleTabs: document.getElementById('scramble-tabs'),
   readCurrentDomains: document.getElementById('read-current-domains'),
   readAllWindows: document.getElementById('read-all-windows'),
   copyTabList: document.getElementById('copy-tab-list'),
-};
+});
 
 const debugStatus = document.getElementById('debug-status');
 const debugTabsList = document.getElementById('debug-tabs-list');
+
+initActionButtons(buttons, { afterSortByDomain: readCurrentDomains });
+initPinnedTabsCue();
+initAffectedTabCounts();
+initUsageSuggestion({ afterSortEnabled: () => location.reload() });
 
 // Get current window tabs
 async function getCurrentWindowTabs() {
@@ -58,14 +60,7 @@ async function getAllGroups() {
   });
 }
 
-// Button event listeners
-buttons.sortByDomain.addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({
-    action: 'sortByDomain',
-  });
-  await readCurrentDomains();
-});
-
+// Debug-only button event listeners (not part of the shared action set)
 buttons.readCurrentDomains.addEventListener('click', async () => {
   try {
     await readCurrentDomains();
@@ -95,121 +90,6 @@ buttons.scrambleTabs.addEventListener('click', async () => {
     debugStatus.textContent = `Could not scramble tabs: ${response.error}`;
   }
 });
-
-buttons.groupByDomain.addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({
-    action: 'groupByDomain',
-    ignoreSubdomain: false,
-  });
-});
-
-buttons.groupByDomainIgnoreSubdomain.addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({
-    action: 'groupByDomain',
-    ignoreSubdomain: true,
-  });
-});
-
-buttons.groupGoogleDocsByType.addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({
-    action: 'groupGoogleDocsByType',
-  });
-});
-
-buttons.ungroup.addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({
-    action: 'ungroup',
-  });
-});
-
-buttons.removeDuplicates.addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({
-    action: 'removeDuplicates',
-  });
-});
-
-buttons.moveDomainCurrentWindow.addEventListener('click', async () => {
-  const domain = await getActiveTabDomain();
-  if (domain) {
-    await chrome.runtime.sendMessage({
-      action: 'moveDomainCurrentWindow',
-      domain,
-    });
-  }
-});
-
-buttons.moveDomainAllWindows.addEventListener('click', async () => {
-  const domain = await getActiveTabDomain();
-  if (domain) {
-    await chrome.runtime.sendMessage({
-      action: 'moveDomainAllWindows',
-      domain,
-    });
-  }
-});
-
-buttons.moveUngroupedCurrentWindow.addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({
-    action: 'moveUngroupedCurrentWindow',
-  });
-});
-
-buttons.bringToWindow.addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({
-    action: 'bringToWindow',
-  });
-});
-
-buttons.closeDomainCurrentWindow.addEventListener('click', async () => {
-  const domain = await getActiveTabDomain();
-  if (domain) {
-    const confirmed = confirm(
-      `Are you sure you want to close all tabs for ${domain} in this window?`
-    );
-    if (confirmed) {
-      await chrome.runtime.sendMessage({
-        action: 'closeDomainCurrentWindow',
-        domain,
-      });
-    }
-  }
-});
-
-buttons.closeDomainAllWindows.addEventListener('click', async () => {
-  const domain = await getActiveTabDomain();
-  if (domain) {
-    const confirmed = confirm(
-      `Are you sure you want to close all tabs for ${domain} from all windows?`
-    );
-    if (confirmed) {
-      await chrome.runtime.sendMessage({
-        action: 'closeDomainAllWindows',
-        domain,
-      });
-    }
-  }
-});
-
-buttons.settings.addEventListener('click', () => {
-  chrome.runtime.openOptionsPage();
-});
-
-// Use the active tab as the domain source for domain-specific actions.
-async function getActiveTabDomain() {
-  const tabs = await new Promise((resolve) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (activeTabs) => {
-      resolve(activeTabs);
-    });
-  });
-  const domain = extractDomain(tabs[0]?.url);
-
-  if (!domain) {
-    alert('The current tab does not have a domain that can be used for this action.');
-    return null;
-  }
-
-  return domain;
-}
 
 // Read every current-window tab for before/after sorting comparisons.
 async function readCurrentDomains() {

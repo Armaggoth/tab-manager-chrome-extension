@@ -45,9 +45,9 @@ You've successfully created the following project structure:
 
 ## Step 3: Test Core Logic
 
-The service worker now handles the main tab operations, including sorting, grouping, duplicate removal, moving, closing, bringing tabs between windows, and finding media-playing tabs. Use the [Manual Test Plan](MANUAL-TEST-PLAN.md) to validate each operation with the relevant settings enabled.
+The service worker now handles the main tab operations, including sorting, grouping, duplicate removal, exact-domain and no-subdomain moving, closing, bringing tabs between windows, and finding media-playing tabs. Use the [Manual Test Plan](MANUAL-TEST-PLAN.md) to validate each operation with the relevant settings enabled.
 
-The side panel also includes an explicit **Group Google Docs by Type** action for Google Docs, Sheets, Slides, and Forms.
+The popup and side panel share an explicit **Group Google Docs by Type** action for Google Docs, Sheets, Slides, Forms, Vids, and Drawings. Action buttons display affected-tab counts, and the pinned-tab cue appears when pinned tabs are ignored.
 
 ## Step 4: Manual Validation
 
@@ -59,7 +59,7 @@ The current icon assets are already available in `/assets/`:
 - `icon-16.png` (16x16)
 - `icon-48.png` (48x48)
 - `icon-128.png` (128x128)
-- `default-favicon.png` (fallback favicon)
+- `no-pin.png` (transparent pinned-tab ignored cue)
 
 ## Accessibility Features Included
 

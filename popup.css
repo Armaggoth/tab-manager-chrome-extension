@@ -1,0 +1,92 @@
+/* Compact popup overrides: no borders, no scrolling, tighter spacing */
+body {
+  --spacing-xs: 2px;
+  --spacing-sm: 4px;
+  --spacing-md: 6px;
+  --spacing-lg: 8px;
+  --font-size-sm: 11px;
+  --font-size-base: 12px;
+  --font-size-lg: 13px;
+  --font-size-xl: 14px;
+
+  overflow: hidden;
+  height: auto;
+  width: max-content;
+  min-width: 300px;
+  max-height: 600px;
+}
+
+.container {
+  height: auto;
+  width: max-content;
+  max-height: 600px;
+  overflow: hidden;
+}
+
+header {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: none;
+}
+
+section {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: none;
+}
+
+section:last-of-type {
+  flex: initial;
+  overflow: visible;
+}
+
+h3 {
+  margin: 0 0 2px 0;
+  font-size: 10px;
+}
+
+.actions-grid {
+  gap: var(--spacing-sm);
+  min-width: max-content;
+}
+
+.usage-suggestion {
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  border: none;
+}
+
+.usage-suggestion-actions {
+  gap: 2px;
+}
+
+.usage-suggestion-actions .btn {
+  padding: 4px 2px;
+  font-size: 10px;
+}
+
+.action-group {
+  gap: 0;
+}
+
+.action-group .btn {
+  border: none;
+  border-radius: 0;
+  padding: 5px var(--spacing-sm);
+}
+
+.action-group .btn-secondary,
+.action-group .btn-danger {
+  background-color: transparent;
+}
+
+.action-group .btn-secondary:hover {
+  background-color: var(--color-hover);
+}
+
+.action-group .btn-danger:hover {
+  background-color: rgba(211, 59, 39, 0.1);
+}
+
+footer {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: none;
+}

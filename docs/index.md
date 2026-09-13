@@ -4,7 +4,7 @@
 
 This folder contains all documentation for Tab Manager, organized into logical sections for easy navigation.
 
-**Last Updated**: August 28, 2026
+**Last Updated**: September 9, 2026
 **Current Phase**: Testing & Polish
 
 ---
@@ -24,14 +24,23 @@ Comprehensive research on UI patterns, accessibility, and design principles.
 ### [🎨 Design](design/index.md) – UI Design Decisions
 Design patterns, component specifications, and recommended structure.
 
+### [🧩 Feature Specifications](specs/README.md) – Self-Contained Large Features
+
+- [Spec 001: Operations UI Modes](specs/spec001/README.md) – P1 Text/Icons Operations mode feature specification
+
 ### [⚙️ Architecture](architecture/index.md) – Technical Architecture
 Service worker patterns, message passing, Chrome APIs, and implementation details.
+
+- [Undo Feature Plan](architecture/undo-feature.md) – Planned undo/redo design for the last 20 actions
+- [Feature Usage Tracking](architecture/feature-usage-tracking.md) – Implemented usage stats, threshold suggestion, and menu reordering
 
 ### [📋 Guides](guides/index.md) – Setup & Development Guides
 - [SETUP.md](guides/SETUP.md) – Initial project setup
 - [PROGRESS.md](guides/PROGRESS.md) – Development progress tracking
 - [MANUAL-TEST-PLAN.md](guides/MANUAL-TEST-PLAN.md) – Feature-by-feature manual test plan
 - [BUG-LOG.md](guides/BUG-LOG.md) – Defects, fixes, and retest results
+- [CHROME-WEB-STORE-PUBLISHING.md](guides/CHROME-WEB-STORE-PUBLISHING.md) – Publishing account and store submission checklist
+- [Change Management Process](guides/change-management.md) – Work-item classification and delivery guidance
 
 ---
 
@@ -76,7 +85,7 @@ Based on research and best practices:
 
 ### Hybrid Model: Tabs + Accordions + Progressive Disclosure (planned)
 
-The current side panel uses one responsive, scrollable action view. The hybrid model below is a planned UI reorganization, not the current implementation.
+The current Operations UI is a shared responsive action view available in the popup and side panel. The hybrid model below remains a planned UI reorganization.
 
 **Tab 1: Quick Actions** (Most-used, expanded by default)
 - Sort by Domain
@@ -109,6 +118,10 @@ docs/
 │   └── 05-feature-grouping-strategy.md
 ├── design/
 │   └── index.md
+├── specs/
+│   ├── README.md
+│   └── spec001/
+│       └── README.md
 ├── architecture/
 │   └── index.md
 ├── guides/

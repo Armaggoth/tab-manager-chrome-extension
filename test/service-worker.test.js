@@ -4,6 +4,7 @@ import {
   detectGoogleDocsType,
   getDomainSortKey,
   getGroupingKey,
+  getGroupingLabel,
   getGoogleDocsTypeLabel,
 } from '../utils.js';
 
@@ -15,7 +16,10 @@ let removeCalls = [];
 let groups = [];
 let groupCalls = [];
 let windowCreateCalls = [];
+let windowUpdateCalls = [];
 let updateCalls = [];
+let setPopupCalls = [];
+let localStorageData = {};
 let currentWindowId = 1;
 
 globalThis.chrome = {
@@ -74,10 +78,31 @@ globalThis.chrome = {
   },
   storage: {
     sync: {
-      get: (defaults, callback) => callback({ ...defaults, ...settings }),
+      get: (defaults, callback) => {
+        const result = { ...defaults, ...settings };
+        if (typeof callback === 'function') callback(result);
+        return Promise.resolve(result);
+      },
+    },
+    local: {
+      get: (key) => {
+        const requestedKey = typeof key === 'string' ? key : Object.keys(key)[0];
+        return Promise.resolve({ [requestedKey]: localStorageData[requestedKey] });
+      },
+      set: (items) => {
+        Object.assign(localStorageData, items);
+        return Promise.resolve();
+      },
+    },
+    onChanged: { addListener: () => {} },
+  },
+  action: {
+    onClicked: { addListener: () => {} },
+    setPopup: (options) => {
+      setPopupCalls.push(options);
+      return Promise.resolve();
     },
   },
-  action: { onClicked: { addListener: () => {} } },
   sidePanel: { open: () => {} },
   windows: {
     WINDOW_ID_CURRENT: currentWindowId,
@@ -97,7 +122,12 @@ globalThis.chrome = {
       }
       return Promise.resolve(currentWindow);
     },
-    update: (windowId, updateInfo, callback) => callback({ id: windowId, ...updateInfo }),
+    update: (windowId, updateInfo, callback) => {
+      windowUpdateCalls.push({ windowId, updateInfo });
+      const updatedWindow = { id: windowId, ...updateInfo };
+      if (typeof callback === 'function') callback(updatedWindow);
+      return Promise.resolve(updatedWindow);
+    },
   },
   tabGroups: {
     TAB_GROUP_ID_NONE: -1,
@@ -115,6 +145,8 @@ globalThis.chrome = {
         messageHandler = handler;
       },
     },
+    onInstalled: { addListener: () => {} },
+    onStartup: { addListener: () => {} },
   },
 };
 
@@ -171,7 +203,7 @@ function runMoveUngroupedCurrentWindow(tabs, activeSettings = {}) {
   });
 }
 
-function runMoveDomainCurrentWindow(tabs, activeSettings = {}) {
+function runMoveDomainCurrentWindow(tabs, activeSettings = {}, options = {}) {
   currentTabs = tabs.map((tab) => ({ ...tab }));
   settings = activeSettings;
   moveCalls = [];
@@ -181,7 +213,21 @@ function runMoveDomainCurrentWindow(tabs, activeSettings = {}) {
   updateCalls = [];
   currentWindowId = 1;
   return new Promise((resolve) => {
-    messageHandler({ action: 'moveDomainCurrentWindow' }, {}, resolve);
+    messageHandler({ action: 'moveDomainCurrentWindow', ...options }, {}, resolve);
+  });
+}
+
+function runMoveDomainAllWindows(tabs, activeSettings = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'moveDomainAllWindows' }, {}, resolve);
   });
 }
 
@@ -224,6 +270,17 @@ function runCloseDomainAllWindows(tabs, activeSettings = {}) {
   currentWindowId = 1;
   return new Promise((resolve) => {
     messageHandler({ action: 'closeDomainAllWindows' }, {}, resolve);
+  });
+}
+
+function runFindMediaPlaying(tabs) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = {};
+  updateCalls = [];
+  windowUpdateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'findMediaPlaying' }, {}, resolve);
   });
 }
 
@@ -636,6 +693,41 @@ test('moves only the active Google editor type for domain moves', { concurrency:
   );
 });
 
+test('moves matching base-domain tabs with no-subdomain domain moves', { concurrency: false }, async () => {
+  await runMoveDomainCurrentWindow(
+    [
+      createTab(1, 'https://www.example.com/start', { active: true }),
+      createTab(2, 'https://app.example.com/next'),
+      createTab(3, 'https://other.example/'),
+      createTab(4, 'https://example.com/grouped', { groupId: 7 }),
+    ],
+    {},
+    { action: 'moveDomainCurrentWindowNoSubdomain' }
+  );
+
+  const movedWindowId = windowCreateCalls[0].windowId;
+  assert.deepEqual(moveCalls, [
+    { tabIds: [2, 4], moveProperties: { windowId: movedWindowId, index: -1 } },
+  ]);
+});
+
+test('groups Google Docs editor tabs together for no-subdomain domain moves', { concurrency: false }, async () => {
+  await runMoveDomainCurrentWindow(
+    [
+      createTab(1, 'https://docs.google.com/document/d/doc-a/edit', { active: true }),
+      createTab(2, 'https://docs.google.com/spreadsheets/d/sheet-a/edit'),
+      createTab(3, 'https://docs.google.com/presentation/d/slide-a/edit'),
+      createTab(4, 'https://other.example/'),
+    ],
+    {},
+    { action: 'moveDomainCurrentWindowNoSubdomain' }
+  );
+
+  assert.deepEqual(moveCalls, [
+    { tabIds: [2, 3], moveProperties: { windowId: windowCreateCalls[0].windowId, index: -1 } },
+  ]);
+});
+
 test('bring all to this window moves pinned and grouped tabs', { concurrency: false }, async () => {
   await runBringAllToCurrentWindow([
     createTab(1, 'https://current.example/'),
@@ -697,4 +789,137 @@ test('closes all-window Google editor type tabs including grouped matches', { co
 
   assert.deepEqual(removeCalls, [[1, 2, 3]]);
   assert.deepEqual(tabIds(), [4, 5]);
+});
+
+test('applies the popup-free side panel access mode by default on load', { concurrency: false }, async () => {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepEqual(setPopupCalls.at(-1), { popup: '' });
+});
+
+test('names hostname-less protocols instead of grouping them as unknown', () => {
+  assert.equal(getGroupingKey('file:///Users/me/report.html'), 'file');
+  assert.equal(getGroupingLabel('file:///Users/me/report.html'), 'Local Files');
+  assert.equal(getGroupingKey('about:blank'), 'about');
+  assert.equal(getGroupingLabel('about:blank'), 'Browser Pages');
+  assert.equal(getGroupingKey('mailto:someone@example.com'), 'mailto');
+  assert.equal(getGroupingLabel('mailto:someone@example.com'), 'Mail Links');
+});
+
+test('groups file:// tabs together under a Local Files group', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'file:///Users/me/report-a.html'),
+    createTab(2, 'file:///Users/me/report-b.html'),
+    createTab(3, 'https://example.com/'),
+  ];
+  groups = [];
+  groupCalls = [];
+
+  await new Promise((resolve) => {
+    messageHandler({ action: 'groupByDomain', ignoreSubdomain: false }, {}, resolve);
+  });
+
+  assert.deepEqual(
+    groupCalls.map((call) => call.tabIds.sort((a, b) => a - b)),
+    [[1, 2]]
+  );
+  assert.equal(groups.find((group) => group.title === 'Local Files')?.title, 'Local Files');
+});
+
+test('finds and focuses the tab currently playing media', { concurrency: false }, async () => {
+  await runFindMediaPlaying([
+    createTab(1, 'https://silent.example/', { windowId: 1 }),
+    createTab(2, 'https://playing.example/', { windowId: 2, audible: true }),
+    createTab(3, 'https://other.example/', { windowId: 2 }),
+  ]);
+
+  assert.deepEqual(windowUpdateCalls, [{ windowId: 2, updateInfo: { focused: true } }]);
+  assert.deepEqual(updateCalls, [
+    { tabId: 2, updateProperties: { highlighted: true, active: true } },
+  ]);
+});
+
+test('does nothing when no tab is playing media', { concurrency: false }, async () => {
+  await runFindMediaPlaying([
+    createTab(1, 'https://silent.example/'),
+    createTab(2, 'https://also-silent.example/'),
+  ]);
+
+  assert.deepEqual(windowUpdateCalls, []);
+  assert.deepEqual(updateCalls, []);
+});
+
+test('records feature usage for tracked actions', { concurrency: false }, async () => {
+  localStorageData = {};
+  await runSort([
+    createTab(1, 'https://b.example/'),
+    createTab(2, 'https://a.example/'),
+  ]);
+
+  assert.equal(localStorageData.usageStats.sortByDomain.count, 1);
+  assert.ok(localStorageData.usageStats.sortByDomain.lastUsedAt > 0);
+});
+
+test('increments usage count on repeated use of the same feature', { concurrency: false }, async () => {
+  localStorageData = {};
+  await runSort([
+    createTab(1, 'https://b.example/'),
+    createTab(2, 'https://a.example/'),
+  ]);
+  await runSort([
+    createTab(1, 'https://b.example/'),
+    createTab(2, 'https://a.example/'),
+  ]);
+
+  assert.equal(localStorageData.usageStats.sortByDomain.count, 2);
+});
+
+test('does not record usage when a tracked action makes no change', { concurrency: false }, async () => {
+  localStorageData = {};
+  await runSort([
+    createTab(1, 'https://a.example/'),
+    createTab(2, 'https://b.example/'),
+  ]);
+
+  assert.equal(localStorageData.usageStats, undefined);
+});
+
+test('records no-subdomain grouping separately from normal domain grouping', { concurrency: false }, async () => {
+  localStorageData = {};
+  currentTabs = [
+    createTab(1, 'https://one.example.com/'),
+    createTab(2, 'https://two.example.com/'),
+  ];
+  settings = {};
+  groups = [];
+  groupCalls = [];
+
+  await new Promise((resolve) => {
+    messageHandler({ action: 'groupByDomain', ignoreSubdomain: true }, {}, resolve);
+  });
+
+  assert.equal(localStorageData.usageStats.groupByDomainNoSubdomain.count, 1);
+  assert.equal(localStorageData.usageStats.groupByDomain, undefined);
+});
+
+test('does not record usage for pinned-only domain moves when pinned tabs are ignored', { concurrency: false }, async () => {
+  localStorageData = {};
+  await runMoveDomainAllWindows([
+    createTab(1, 'https://mail.google.com/mail/u/0/', { active: true, pinned: true }),
+    createTab(2, 'https://example.com/', { windowId: 2 }),
+  ], { ignorePinnedTabs: true });
+
+  assert.deepEqual(windowCreateCalls, []);
+  assert.equal(localStorageData.usageStats, undefined);
+});
+
+test('does not record usage for debug-only actions', { concurrency: false }, async () => {
+  localStorageData = {};
+  currentTabs = [createTab(1, 'https://a.example/')];
+  settings = {};
+
+  await new Promise((resolve) => {
+    messageHandler({ action: 'scrambleTabs' }, {}, resolve);
+  });
+
+  assert.equal(localStorageData.usageStats, undefined);
 });

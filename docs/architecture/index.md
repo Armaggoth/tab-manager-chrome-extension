@@ -4,6 +4,8 @@ This folder contains documentation about Tab Manager's technical architecture an
 
 ## Contents
 
+- [Undo Feature Plan](undo-feature.md) – Planned undo/redo design for the last 20 actions
+- [Feature Usage Tracking](feature-usage-tracking.md) – Implemented usage stats, threshold suggestion, and menu reordering
 - **Coming Soon**: Service worker implementation patterns
 - **Coming Soon**: Message passing architecture
 - **Coming Soon**: Tab API usage patterns
@@ -16,7 +18,7 @@ This folder contains documentation about Tab Manager's technical architecture an
 Tab Manager follows a standard Chrome extension architecture:
 
 ```
-User Interface (side-panel.html/js/css)
+User Interface (popup or side-panel HTML/JS/CSS)
           ↓ chrome.runtime.sendMessage()
 Service Worker (service-worker.js)
           ↓ Chrome APIs

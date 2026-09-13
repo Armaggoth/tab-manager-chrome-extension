@@ -69,6 +69,19 @@ Record the date, test setup, and result here after each fix. Do not mark a bug c
 - **Result**: Passed. Grouped tabs were ungrouped, all rows reported `Group ID: None` and `Group Name: None`, special tabs remained present, and the tab count was unchanged.
 - **Pinned tabs**: The six pinned tabs remained present and retained their pinned status.
 
+## Bug 3: Find Media Playing Has No Side-Panel Button
+
+- **Status**: Closed
+- **Feature**: Find Media Playing
+- **Reproduction**:
+  1. Open the side panel.
+  2. Look for a "Find Media Playing" button in any action group.
+- **Expected**: A button exists and sends the `findMediaPlaying` action, per the message handler in `service-worker.js` and the `find-media-playing` action listed in `CLAUDE.md`.
+- **Actual**: `service-worker.js` still implements `findMediaPlaying()` and handles the `'findMediaPlaying'` message, but `side-panel.html` has no corresponding button and `side-panel.js` has no listener wired to it. The feature is backend-only and unreachable from the UI.
+- **Likely cause**: The research docs (`docs/research/05-feature-grouping-strategy.md`, `docs/research/03-progressive-disclosure.md`) planned this action under a future "Search & Focus" group that was never added to `side-panel.html` when the current action groups (Sort & Group, Clean Up, Move Tabs, Close Tabs) were built out.
+- **Fix**: Added a "Search & Focus" action group in `side-panel.html`, wired a click listener in `side-panel.js` that sends `{ action: 'findMediaPlaying' }`, and added localized strings to `_locales/en/messages.json` and `_locales/es/messages.json`.
+- **Regression test**: Added `finds and focuses the tab currently playing media` and `does nothing when no tab is playing media` to `test/service-worker.test.js`, including a promise-compatible `chrome.windows.update` mock. Both pass via `npm test`.
+
 ## Successful Validation: Remove Duplicates
 
 - **Feature**: Remove Duplicates

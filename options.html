@@ -45,6 +45,46 @@
           </div>
         </section>
 
+        <section aria-labelledby="access-mode-heading">
+          <h2 id="access-mode-heading">Access Mode</h2>
+
+          <div class="setting-group" role="radiogroup" aria-labelledby="access-mode-heading">
+            <label for="access-mode-side-panel" class="checkbox-label">
+              <input type="radio" id="access-mode-side-panel" name="access-mode" value="sidePanel" />
+              <span>Side Panel</span>
+            </label>
+            <label for="access-mode-popup" class="checkbox-label">
+              <input type="radio" id="access-mode-popup" name="access-mode" value="popup" />
+              <span>Popup</span>
+            </label>
+            <p id="access-mode-description" class="setting-description">
+              Choose what opens when you click the toolbar icon: the side panel, or a smaller popup dropdown with the same actions.
+            </p>
+          </div>
+        </section>
+
+        <section aria-labelledby="usage-heading">
+          <h2 id="usage-heading">Usage</h2>
+
+          <div class="setting-group">
+            <p id="usage-empty-message" class="setting-description" hidden>
+              No feature usage recorded yet. Usage counts appear here as you use the Actions.
+            </p>
+            <ol id="usage-list" class="usage-list" aria-label="Feature usage counts"></ol>
+            <label for="usage-suggestions-enabled" class="checkbox-label">
+              <input type="checkbox" id="usage-suggestions-enabled" />
+              <span>Suggest sorting actions based on usage</span>
+            </label>
+            <label for="usage-sort-enabled" class="checkbox-label">
+              <input type="checkbox" id="usage-sort-enabled" />
+              <span>Show Most Used actions in the panel and popup</span>
+            </label>
+            <button id="reset-usage-btn" class="btn btn-secondary btn-small">
+              Reset usage stats
+            </button>
+          </div>
+        </section>
+
         <section aria-labelledby="localization-heading">
           <h2 id="localization-heading">Localization</h2>
 
@@ -69,6 +109,6 @@
       </footer>
     </div>
 
-    <script src="options.js"></script>
+    <script src="options.js" type="module"></script>
   </body>
 </html>

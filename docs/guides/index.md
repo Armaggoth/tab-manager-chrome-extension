@@ -29,6 +29,12 @@ Feature-by-feature Chrome validation plan, including:
 ### [BUG-LOG.md](BUG-LOG.md)
 Defects found during manual and focused automated testing, including reproduction steps, fixes, and retest results.
 
+### [CHROME-WEB-STORE-PUBLISHING.md](CHROME-WEB-STORE-PUBLISHING.md)
+Publishing account setup, dedicated email guidance, listing requirements, privacy disclosures, and review submission.
+
+### [Change Management Process](change-management.md)
+Lightweight SDLC guidance for large features, small features, bugs, hotfixes, maintenance changes, and incidents.
+
 ---
 
 ## Quick Links
@@ -37,6 +43,8 @@ Defects found during manual and focused automated testing, including reproductio
 - **Development Progress**: See [PROGRESS.md](PROGRESS.md)
 - **Manual testing**: See [MANUAL-TEST-PLAN.md](MANUAL-TEST-PLAN.md)
 - **Bug tracking**: See [BUG-LOG.md](BUG-LOG.md)
+- **Chrome Web Store publishing**: See [CHROME-WEB-STORE-PUBLISHING.md](CHROME-WEB-STORE-PUBLISHING.md)
+- **Change management**: See [Change Management Process](change-management.md)
 - **Architecture Details**: See root [CLAUDE.md](../../CLAUDE.md)
 - **Project Overview**: See root [README.md](../../README.md)
 
@@ -58,5 +66,6 @@ Defects found during manual and focused automated testing, including reproductio
 | PROGRESS.md | Guides | Development progress tracking |
 | MANUAL-TEST-PLAN.md | Guides | Feature-by-feature manual validation |
 | BUG-LOG.md | Guides | Defect tracking and retest results |
+| CHROME-WEB-STORE-PUBLISHING.md | Guides | Chrome Web Store publishing checklist |
 | CLAUDE.md | Root | Full architecture & requirements |
 | README.md | Root | User-facing documentation |

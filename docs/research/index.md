@@ -46,7 +46,7 @@ Guide to accordion design patterns for organizing content.
 - Accessibility (ARIA, focus management)
 
 ### 5. [Feature Grouping Strategy for Tab Manager](05-feature-grouping-strategy.md)
-Tailored analysis and recommendations specific to Tab Manager's 12 operations.
+Tailored analysis and recommendations specific to Tab Manager's 14 operations.
 
 **Key Topics**:
 - Analysis of Tab Manager operations

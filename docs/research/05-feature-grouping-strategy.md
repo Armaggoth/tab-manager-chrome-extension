@@ -2,7 +2,7 @@
 
 ## Tab Manager Operations Analysis
 
-### Current Operations (12 total)
+### Current Operations (14 total)
 
 #### Group 1: Organization & Sorting
 1. Sort tabs by domain
@@ -119,7 +119,7 @@ Organize by user workflow rather than technical grouping:
 
 **Disadvantages**:
 - Requires some categorization work
-- Might be overkill for MVP with only 12 operations
+- Might be overkill for MVP with only 14 operations
 
 ---
 

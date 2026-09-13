@@ -40,12 +40,12 @@
     "description": "Button to remove duplicate tabs"
   },
   "moveDomainCurrentWindow": {
-    "message": "Move Domain (Current Window)",
-    "description": "Button to move tabs from current window"
+    "message": "Move Domain to New Window (Current Window)",
+    "description": "Button to move tabs from the active tab's domain in the current window to a new window"
   },
   "moveDomainAllWindows": {
-    "message": "Move Domain (All Windows)",
-    "description": "Button to move tabs from all windows"
+    "message": "Move Domain to New Window (All Windows)",
+    "description": "Button to move tabs from the active tab's domain in all windows to a new window"
   },
   "moveUngroupedCurrentWindow": {
     "message": "Move Ungrouped to New Window",
@@ -62,6 +62,10 @@
   "closeDomainAllWindows": {
     "message": "Close Domain (All Windows)",
     "description": "Button to close tabs from all windows"
+  },
+  "findMediaPlaying": {
+    "message": "Find Media Playing",
+    "description": "Button to focus the tab currently playing audio or video"
   },
   "settings": {
     "message": "Settings",

@@ -40,16 +40,16 @@
     "description": "Button to remove duplicate tabs"
   },
   "moveDomainCurrentWindow": {
-    "message": "Mover Dominio (Ventana Actual)",
-    "description": "Button to move tabs from current window"
+    "message": "Mover Dominio a Nueva Ventana (Ventana Actual)",
+    "description": "Botón para mover pestañas del dominio de la pestaña activa en la ventana actual a una ventana nueva"
   },
   "moveDomainAllWindows": {
-    "message": "Mover Dominio (Todas las Ventanas)",
-    "description": "Button to move tabs from all windows"
+    "message": "Mover Dominio a Nueva Ventana (Todas las Ventanas)",
+    "description": "Botón para mover pestañas del dominio de la pestaña activa en todas las ventanas a una ventana nueva"
   },
   "moveUngroupedCurrentWindow": {
     "message": "Mover No Agrupadas a Nueva Ventana",
-    "description": "Button to move ungrouped tabs from the current window to a new window"
+    "description": "Botón para mover pestañas no agrupadas de la ventana actual a una ventana nueva"
   },
   "bringToWindow": {
     "message": "Traer Todos a Esta Ventana",
@@ -62,6 +62,10 @@
   "closeDomainAllWindows": {
     "message": "Cerrar Dominio (Todas las Ventanas)",
     "description": "Button to close tabs from all windows"
+  },
+  "findMediaPlaying": {
+    "message": "Buscar Reproducción de Medios",
+    "description": "Button to focus the tab currently playing audio or video"
   },
   "settings": {
     "message": "Configuración",

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Tab Manager is a Chrome extension (Manifest v3) that helps users organize and clean up browser tabs. The extension uses a **side panel UI** (not a popup) where users can trigger tab management operations via buttons. Core logic runs in a background **service worker**, while the UI communicates with it via message passing.
+Tab Manager is a Chrome extension (Manifest v3) that helps users organize and clean up browser tabs. It provides a shared Operations UI in either a popup or side panel, while the options page contains settings and usage statistics. Core logic runs in a background **service worker**, while the UI communicates with it via message passing.
 
 **Key Requirement**: All operations are triggered by explicit user action only—no auto-grouping or background reorganization.
 
@@ -34,6 +34,8 @@ Chrome Tab/Window APIs
 6. **Operations Move to New Windows**: When moving tabs, create new Chrome windows (not tab groups).
 7. **User Action Only**: No background reorganization. Every operation starts from a button click.
 8. **Localization**: Always update both `_locales/en/messages.json` and `_locales/es/messages.json` when adding user-facing strings.
+9. **Affected-Tab Counts**: Operations buttons show the current number of tabs they would affect; the count is omitted when it is zero.
+10. **Pinned-Tab Cue**: Popup and side panel show `assets/no-pin.png` with an explanatory tooltip when pinned tabs are ignored.
 
 ## Key Functions
 
@@ -77,11 +79,13 @@ Each requires a message handler in service-worker.js:
 5. **Remove Duplicates** – Close duplicate tabs (same URL or same Google Docs ID if `detectDuplicateGoogleDocs` is enabled), keep one
 6. **Move Domain (Current Window)** → New Window – Use the active tab's domain and move all matching tabs, including grouped tabs, from the current window to a new window
 7. **Move Domain (All Windows)** → New Window – Use the active tab's domain and move all matching tabs, including grouped tabs, from all browser windows to a new window
-8. **Move Ungrouped to New Window** – Move eligible ungrouped tabs from the current window to a new window
-9. **Bring All to This Window** – Move all tabs from other windows to current window, preserving pinned state and groups
-10. **Close Domain (Current Window)** – Close all tabs matching the active tab's domain, including grouped tabs, in current window
-11. **Close Domain (All Windows)** – Close all tabs matching the active tab's domain, including grouped tabs, across all browser windows
-12. **Find Media Playing** – Find and focus the tab currently playing audio/video across all windows
+8. **Move Domain (Current Window, No Subdomain)** → New Window – Use the active tab's base domain and shared no-subdomain/Google Docs matching rules
+9. **Move Domain (All Windows, No Subdomain)** → New Window – Use the active tab's base domain across all windows and shared no-subdomain/Google Docs matching rules
+10. **Move Ungrouped to New Window** – Move eligible ungrouped tabs from the current window to a new window
+11. **Bring All to This Window** – Move all tabs from other windows to current window, preserving pinned state and groups
+12. **Close Domain (Current Window)** – Close all tabs matching the active tab's domain, including grouped tabs, in current window
+13. **Close Domain (All Windows)** – Close all tabs matching the active tab's domain, including grouped tabs, across all browser windows
+14. **Find Media Playing** – Find and focus the tab currently playing audio/video across all windows
 
 ## Accessibility Standards
 
@@ -122,18 +126,24 @@ When adding new UI: Use semantic HTML first, add `aria-label` or `aria-labelledb
 ## Development Notes
 
 - **No build step** – Vanilla JS, CSS, HTML. Load directly into Chrome via `chrome://extensions` (Developer mode).
-- **Icons** – Placeholder system in manifest.json but assets need to be created. Add 16x16, 48x48, 128x128 PNG files to `/assets/`.
-- **Testing** – No test framework yet. Manual testing in Chrome required for now.
+- **Icons** – Runtime icons and the transparent pinned-tab cue are available in `/assets/`.
+- **Testing** – Run `npm test` for automated coverage; Chrome manual testing is still required for browser behavior.
 - **Storage** – Settings stored in `chrome.storage.sync` (synced across user's Chrome browsers).
+
+## Git Workflow
+
+- Commit directly to `main` only when the user explicitly requests that workflow.
+- Run `npm test` before staging changes; the repository pre-commit hook runs the same suite.
+- Check `origin/main` for drift before staging, and stage only the files that belong to the requested change.
 
 ## Next Steps When Continuing
 
-1. Implement 11 message handlers in service-worker.js for tab operations
-2. Create domain selection UI/logic (currently uses `prompt()`, consider improving UX)
-3. Add icon assets to `/assets/`
-4. Test each operation in Chrome locally
+1. Complete remaining Chrome manual validation
+2. Implement the planned selectable text/icon Operations modes
+3. Research and improve the text-based layout using Chrome extension UI best practices
+4. Add the core Stats, Settings, and About tabs in the options window
 5. Consider error handling and user feedback (toast messages, dialogs)
-6. Build a package/zip for distribution
+6. Build and publish a package after feature work is complete
 
 ## Common Gotchas
 

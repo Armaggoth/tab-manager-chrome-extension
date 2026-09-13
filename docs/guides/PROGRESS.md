@@ -4,7 +4,8 @@
 
 ### Completed (Chat #1 - 2026-05-07)
 
-**Scaffolding & Setup**
+#### Scaffolding & Setup
+
 - Manifest v3 configuration
 - Side panel UI with all 13 action buttons (full HTML/CSS/JS)
 - Options page (settings: ignore pinned tabs, language)
@@ -41,6 +42,15 @@
 - Added helper functions: `filterTabs()`, `getSettings()`, `queryTabs()`, `moveTabs()`
 - Handlers respect user settings where applicable; normal sorting and grouping always protect existing groups
 
+### Completed (Chat #4 - 2026-09-11)
+
+**Move Tabs Clarity and Operations UI Mode Planning**
+- Clarified the Move Tabs labels to state when tabs move to a new window, and added action-specific tooltips in the shared popup and side-panel action renderer.
+- Made the popup width content-driven so longer Move Tabs labels are not ellipsized.
+- Added focused DOM coverage for all Move Tabs labels and tooltips; `node --test test/panel-actions.test.js` passed with 6 tests.
+- Reorganized outstanding requirements into P1-P5 active, queued, and deferred roadmap sections.
+- Added [Spec 001: Operations UI Modes](../specs/spec001/README.md) as the source of truth for its decisions and pending work, linked it from the documentation indexes, and added an extension-wide accessibility improvement requirement.
+
 ## Testing & Manual Validation
 
 - [ ] Execute the detailed [Manual Test Plan](MANUAL-TEST-PLAN.md) by settings profile and feature
@@ -57,20 +67,50 @@
 - [ ] Test media finding functionality
 - [x] Investigate and fix the Sort by Domain defects involving special tabs, repeated clicks, and pinned-tab preservation (checked and unchecked Ignore Pinned Tabs retests passed)
 
-## Supporting Tasks
+## Completed Supporting Tasks
 
 - [x] Do not create groups with a single tab; skip singleton group buckets to avoid noisy UX
 - [x] Add a feature to move all ungrouped tabs in the current window to a new browser window
-- [ ] Improve domain selection UI (currently uses `prompt()`)
+- [x] Use the active tab automatically for domain actions instead of a `prompt()` domain-selection dialog
+- [x] Hide temporary usage-count numbers beside actions in both the popup and side panel while retaining usage statistics in Settings
+- [x] Show the number of tabs that each action would affect directly on each action button; omit the count when it is zero
+- [x] Add a visual cue in the popup and side panel when pinned tabs are being ignored, using the no-pin PNG with an explanatory tooltip
+- [x] Add separate visible buttons for Move Domain (Current Window, No Subdomain) and Move Domain (All Windows, No Subdomain), using the existing no-subdomain matching logic, including Google Docs handling, without duplicating classification rules
 - [x] Add icon assets to `/assets/` (16x16, 48x48, 128x128 transparent PNG)
-- [ ] Add error handling/user feedback (toast messages)
-- [ ] Plan and implement Extract Tabs-style interface with user-selectable popup or side-panel mode
-- [ ] Add settings to choose which actions appear in popup mode and side-panel mode
-- [ ] Add Operations, Stats, Settings, and About views with active-domain counts and current/all-window action rows
-- [ ] Add configurable toolbar badge showing how many windows would be affected by the active action/domain context
-- [ ] Complete About view with version, privacy, permissions, documentation, feedback, and changelog details
-- [ ] Build and package for distribution
-- [ ] Evaluate local Playwright automation to reduce manual extension reloads
+- [x] Add a settings option (`accessMode`) and a `popup.html`/`popup.js` launcher, so the toolbar icon can open either the side panel or a popup listing the exact same actions (list-based UI as a starting point; visual design still to be decided)
+- [x] Remove temporary usage-count numbers from the popup and side panel before shipping
+
+## Requirements Roadmap
+
+P1-P2 are active priorities. P3 is intentionally queued after them. P4-P5 are deferred and should not be implemented until their prerequisites are complete.
+
+### P1: Current UI Direction
+
+- [ ] Implement [Spec 001: Operations UI Modes](../specs/spec001/README.md)
+- [ ] Improve the text-based Operations UI with a more visual, user-friendly horizontal layout based on researched Chrome extension UI best practices
+
+### P2: Configurable Operations
+
+- [ ] Build the icon-based Operations UI with a smaller configurable action set, supporting most-used ordering or explicit user selection in Settings
+- [ ] Add an Operations configuration tab with a checkbox for every action, allowing users to show or hide it in the popup and side-panel UI
+- [ ] Suggest hiding least-used actions from the popup and side-panel UI, using the per-action visibility controls above as a prerequisite
+
+### P3: Settings Completion
+
+- [ ] Keep Operations as the main popup/side-panel view; add Stats, Settings, and About as tabs in the settings window
+- [ ] Add the core About tab with version, description, permissions, privacy, and documentation; defer feedback and changelog details
+- [ ] Complete an extension-wide accessibility improvement pass across the popup, side panel, options page, and user feedback, covering semantic structure, accessible names, keyboard flow, focus states, contrast, screen-reader behavior, and reduced motion
+
+### P4: Deferred Polish and Exploration
+
+- [ ] Add error handling/user feedback (toast messages) - deferred until after the core UI and move features
+- [ ] Add configurable toolbar badge showing how many windows would be affected by the active action/domain context - deferred because the badge meaning is currently ambiguous
+- [ ] Evaluate local Playwright automation to reduce manual extension reloads - defer; use the current Node tests and manual Chrome validation until feature work is complete
+
+### P5: Deferred Release Work
+
+- [ ] Build and package for distribution - deferred until the remaining features and Chrome validation are complete
+- [ ] Complete the [Chrome Web Store publishing guide](CHROME-WEB-STORE-PUBLISHING.md), including developer account setup, dedicated email decision, listing assets, privacy disclosures, and review submission - deferred until feature work is complete
 
 ## Completed Grouping Safety Change
 

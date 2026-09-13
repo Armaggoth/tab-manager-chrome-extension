@@ -7,12 +7,29 @@ import {
   getDomainSortKey,
   getGroupingKey,
   getGroupingLabel,
+  ACTION_LABELS,
 } from './utils.js';
+import { getUsageAction } from './usage.js';
 
-// Open side panel when extension icon is clicked
+// Open side panel when extension icon is clicked (only used when the popup is unset)
 chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId });
 });
+
+// Toggle between the side panel and the popup based on the saved access mode setting.
+async function applyAccessMode() {
+  const { accessMode } = await chrome.storage.sync.get({ accessMode: 'sidePanel' });
+  await chrome.action.setPopup({ popup: accessMode === 'popup' ? 'popup.html' : '' });
+}
+
+chrome.runtime.onInstalled.addListener(applyAccessMode);
+chrome.runtime.onStartup.addListener(applyAccessMode);
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && changes.accessMode) {
+    applyAccessMode();
+  }
+});
+applyAccessMode();
 
 // Message listener for tab operations
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -24,53 +41,79 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 async function handleMessage(request, sender, sendResponse) {
   try {
     const settings = await getSettings();
+    let changed = false;
 
     switch (request.action) {
       case 'sortByDomain':
-        await sortByDomain(settings);
+        changed = await sortByDomain(settings);
         break;
       case 'scrambleTabs':
-        await scrambleTabs();
+        changed = await scrambleTabs();
         break;
       case 'groupByDomain':
-        await groupByDomain(settings, request.ignoreSubdomain);
+        changed = await groupByDomain(settings, request.ignoreSubdomain);
         break;
       case 'groupGoogleDocsByType':
-        await groupGoogleDocsByType(settings);
+        changed = await groupGoogleDocsByType(settings);
         break;
       case 'ungroup':
-        await ungroupTabs(settings);
+        changed = await ungroupTabs(settings);
         break;
       case 'removeDuplicates':
-        await removeDuplicates(settings);
+        changed = await removeDuplicates(settings);
         break;
       case 'moveDomainCurrentWindow':
-        await moveDomainCurrentWindow(settings, request.domain);
+        changed = await moveDomainCurrentWindow(settings, request.domain, false);
         break;
       case 'moveDomainAllWindows':
-        await moveDomainAllWindows(settings, request.domain);
+        changed = await moveDomainAllWindows(settings, request.domain, false);
+        break;
+      case 'moveDomainCurrentWindowNoSubdomain':
+        changed = await moveDomainCurrentWindow(settings, request.domain, true);
+        break;
+      case 'moveDomainAllWindowsNoSubdomain':
+        changed = await moveDomainAllWindows(settings, request.domain, true);
         break;
       case 'moveUngroupedCurrentWindow':
-        await moveUngroupedCurrentWindow(settings);
+        changed = await moveUngroupedCurrentWindow(settings);
         break;
       case 'bringToWindow':
-        await bringAllToCurrentWindow(settings);
+        changed = await bringAllToCurrentWindow(settings);
         break;
       case 'closeDomainCurrentWindow':
-        await closeDomainCurrentWindow(settings, request.domain);
+        changed = await closeDomainCurrentWindow(settings, request.domain);
         break;
       case 'closeDomainAllWindows':
-        await closeDomainAllWindows(settings, request.domain);
+        changed = await closeDomainAllWindows(settings, request.domain);
         break;
       case 'findMediaPlaying':
-        await findMediaPlaying();
+        changed = await findMediaPlaying();
         break;
+      case 'getAffectedTabCounts':
+        sendResponse({ success: true, counts: await getAffectedTabCounts(settings) });
+        return;
+    }
+    if (changed) {
+      await recordFeatureUsage(getUsageAction(request));
     }
     sendResponse({ success: true });
   } catch (error) {
     console.error('Error handling message:', error);
     sendResponse({ success: false, error: error.message });
   }
+}
+
+// Feature usage tracked in chrome.storage.local for the Settings "Usage" tab.
+const TRACKED_ACTIONS = new Set(Object.keys(ACTION_LABELS));
+// Debug-only actions (scrambleTabs, readCurrentDomains, readAllWindows, copyTabList)
+// are intentionally excluded — they aren't real management features.
+
+async function recordFeatureUsage(action) {
+  if (!TRACKED_ACTIONS.has(action)) return;
+  const { usageStats = {} } = await chrome.storage.local.get('usageStats');
+  const entry = usageStats[action] ?? { count: 0, lastUsedAt: 0 };
+  usageStats[action] = { count: entry.count + 1, lastUsedAt: Date.now() };
+  await chrome.storage.local.set({ usageStats });
 }
 
 // Get settings from storage
@@ -160,7 +203,7 @@ async function sortByDomain(settings) {
   const sortedSortableIds = [...sortedPinnedTabs, ...sortedUnpinnedTabs].map((tab) => tab.id);
 
   if (currentSortableIds.every((tabId, index) => tabId === sortedSortableIds[index])) {
-    return;
+    return false;
   }
 
   const desiredIds = [
@@ -169,7 +212,7 @@ async function sortByDomain(settings) {
   ];
   if (sortablePinnedTabs.length + sortableUnpinnedTabs.length === tabs.length) {
     await moveTabs(desiredIds, { index: 0, windowId: tabs[0].windowId });
-    return;
+    return true;
   }
 
   const sortableIds = new Set([...sortablePinnedTabs, ...sortableUnpinnedTabs].map((tab) => tab.id));
@@ -191,6 +234,8 @@ async function sortByDomain(settings) {
     const [movedTab] = workingTabs.splice(currentIndex, 1);
     workingTabs.splice(targetIndex, 0, movedTab);
   }
+
+  return true;
 }
 
 function sortTabsByDomain(tabs) {
@@ -220,6 +265,8 @@ async function scrambleTabs() {
       windowId,
     });
   }
+
+  return tabs.length > 1;
 }
 
 function shuffleTabs(tabs) {
@@ -266,7 +313,7 @@ async function groupByDomain(settings, ignoreSubdomain = false) {
     await moveUngroupedTabsRight(groupedIds, settings);
   }
 
-  return { groupableTabs, ungroupableTabs, groupedIds };
+  return groupedIds.size > 0;
 }
 
 // Group recognized Google editor tabs by document type
@@ -304,7 +351,7 @@ async function groupGoogleDocsByType(settings) {
     await moveUngroupedTabsRight(groupedIds, settings);
   }
 
-  return { groupableTabs, ungroupableTabs, groupedIds };
+  return groupedIds.size > 0;
 }
 
 async function moveUngroupedTabsRight(groupedIds, settings = {}) {
@@ -343,6 +390,8 @@ async function ungroupTabs(settings) {
   for (const tab of grouped) {
     await chrome.tabs.ungroup([tab.id]);
   }
+
+  return grouped.length > 0;
 }
 
 // Remove duplicate tabs
@@ -374,36 +423,44 @@ async function removeDuplicates(settings) {
   if (toRemove.length > 0) {
     await chrome.tabs.remove(toRemove);
   }
+
+  return toRemove.length > 0;
 }
 
 // Move domain tabs from current window to new window
-async function moveDomainCurrentWindow(settings, domain) {
-  const targetMoveKey = await getTargetMoveKey(domain);
-  if (!targetMoveKey) return;
+async function moveDomainCurrentWindow(settings, domain, ignoreSubdomain) {
+  const targetMoveKey = await getTargetMoveKey(domain, ignoreSubdomain);
+  if (!targetMoveKey) return false;
 
   const tabs = await queryTabs({ currentWindow: true });
   const filtered = filterDomainActionTabs(tabs, settings);
-  const matching = filtered.filter((tab) => getMoveKey(tab.url) === targetMoveKey);
+  const matching = filtered.filter(
+    (tab) => getMoveKey(tab.url, ignoreSubdomain) === targetMoveKey
+  );
 
-  if (matching.length === 0) return;
+  if (matching.length === 0) return false;
 
   const tabIds = matching.map((t) => t.id);
   await moveTabsToNewWindow(tabIds);
+  return true;
 }
 
 // Move domain tabs from all windows to new window
-async function moveDomainAllWindows(settings, domain) {
-  const targetMoveKey = await getTargetMoveKey(domain);
-  if (!targetMoveKey) return;
+async function moveDomainAllWindows(settings, domain, ignoreSubdomain) {
+  const targetMoveKey = await getTargetMoveKey(domain, ignoreSubdomain);
+  if (!targetMoveKey) return false;
 
   const tabs = await queryTabs({});
   const filtered = filterDomainActionTabs(tabs, settings);
-  const matching = filtered.filter((tab) => getMoveKey(tab.url) === targetMoveKey);
+  const matching = filtered.filter(
+    (tab) => getMoveKey(tab.url, ignoreSubdomain) === targetMoveKey
+  );
 
-  if (matching.length === 0) return;
+  if (matching.length === 0) return false;
 
   const tabIds = matching.map((t) => t.id);
   await moveTabsToNewWindow(tabIds);
+  return true;
 }
 
 // Move all eligible ungrouped tabs from the current window to a new window
@@ -411,9 +468,10 @@ async function moveUngroupedCurrentWindow(settings) {
   const tabs = await queryTabs({ currentWindow: true });
   const ungroupedTabs = filterTabs(tabs, settings);
 
-  if (ungroupedTabs.length === 0) return;
+  if (ungroupedTabs.length === 0) return false;
 
   await moveTabsToNewWindow(ungroupedTabs.map((tab) => tab.id));
+  return true;
 }
 
 // Bring all tabs from other windows to current window
@@ -424,7 +482,7 @@ async function bringAllToCurrentWindow(settings) {
   const otherWindowPinnedTabs = otherWindowTabs.filter((tab) => tab.pinned);
   const otherWindowUnpinnedTabs = otherWindowTabs.filter((tab) => !tab.pinned);
 
-  if (otherWindowTabs.length === 0) return;
+  if (otherWindowTabs.length === 0) return false;
 
   if (otherWindowPinnedTabs.length > 0) {
     const pinnedTabIds = otherWindowPinnedTabs.map((tab) => tab.id);
@@ -439,12 +497,14 @@ async function bringAllToCurrentWindow(settings) {
     const unpinnedTabIds = otherWindowUnpinnedTabs.map((tab) => tab.id);
     await moveTabs(unpinnedTabIds, { windowId: currentWindow.id, index: -1 });
   }
+
+  return true;
 }
 
 // Close domain tabs in current window
 async function closeDomainCurrentWindow(settings, domain) {
   const targetMoveKey = await getTargetMoveKey(domain);
-  if (!targetMoveKey) return;
+  if (!targetMoveKey) return false;
 
   const tabs = await queryTabs({ currentWindow: true });
   const filtered = filterDomainActionTabs(tabs, settings);
@@ -453,13 +513,16 @@ async function closeDomainCurrentWindow(settings, domain) {
   if (matching.length > 0) {
     const tabIds = matching.map((t) => t.id);
     await chrome.tabs.remove(tabIds);
+    return true;
   }
+
+  return false;
 }
 
 // Close domain tabs in all windows
 async function closeDomainAllWindows(settings, domain) {
   const targetMoveKey = await getTargetMoveKey(domain);
-  if (!targetMoveKey) return;
+  if (!targetMoveKey) return false;
 
   const tabs = await queryTabs({});
   const filtered = filterDomainActionTabs(tabs, settings);
@@ -468,7 +531,10 @@ async function closeDomainAllWindows(settings, domain) {
   if (matching.length > 0) {
     const tabIds = matching.map((t) => t.id);
     await chrome.tabs.remove(tabIds);
+    return true;
   }
+
+  return false;
 }
 
 // Find and focus the tab currently playing media
@@ -479,7 +545,74 @@ async function findMediaPlaying() {
   if (playingTab) {
     await chrome.windows.update(playingTab.windowId, { focused: true });
     await chrome.tabs.update(playingTab.id, { highlighted: true, active: true });
+    return true;
   }
+
+  return false;
+}
+
+async function getAffectedTabCounts(settings) {
+  const tabs = await queryTabs({});
+  const currentWindow = await chrome.windows.getCurrent();
+  const currentTabs = tabs.filter((tab) => tab.windowId === currentWindow.id);
+  const eligible = filterTabs(tabs, settings);
+  const currentEligible = eligible.filter((tab) => tab.windowId === currentWindow.id);
+  const activeTab = currentTabs.find((tab) => tab.active);
+  const activeKey = activeTab ? getMoveKey(activeTab.url) : null;
+  const activeBaseKey = activeTab ? getMoveKey(activeTab.url, true) : null;
+  const domainTabs = filterDomainActionTabs(tabs, settings);
+  const currentDomainTabs = domainTabs.filter((tab) => tab.windowId === currentWindow.id);
+  const duplicateKeys = new Set();
+  const seenKeys = new Set();
+
+  for (const tab of eligible) {
+    const key = settings.detectDuplicateGoogleDocs
+      ? `docs:${extractGoogleDocsId(tab.url) || tab.url}`
+      : tab.url;
+    if (seenKeys.has(key)) duplicateKeys.add(tab.id);
+    seenKeys.add(key);
+  }
+
+  const groupedBuckets = (tabsToGroup, ignoreSubdomain) => {
+    const buckets = new Map();
+    tabsToGroup.forEach((tab) => {
+      const key = getGroupingKey(tab.url, ignoreSubdomain);
+      buckets.set(key, (buckets.get(key) || 0) + 1);
+    });
+    return [...buckets.values()]
+      .filter((size) => size > 1)
+      .reduce((total, size) => total + size, 0);
+  };
+
+  return {
+    sortByDomain: currentEligible.length,
+    groupByDomain: groupedBuckets(currentEligible, false),
+    groupByDomainNoSubdomain: groupedBuckets(currentEligible, true),
+    groupGoogleDocsByType: currentEligible.filter((tab) => detectGoogleDocsType(tab.url)).length,
+    ungroup: currentTabs.filter((tab) => tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE).length,
+    removeDuplicates: duplicateKeys.size,
+    moveDomainCurrentWindow: activeKey
+      ? currentDomainTabs.filter((tab) => getMoveKey(tab.url) === activeKey).length
+      : 0,
+    moveDomainAllWindows: activeKey
+      ? domainTabs.filter((tab) => getMoveKey(tab.url) === activeKey).length
+      : 0,
+    moveDomainCurrentWindowNoSubdomain: activeBaseKey
+      ? currentDomainTabs.filter((tab) => getMoveKey(tab.url, true) === activeBaseKey).length
+      : 0,
+    moveDomainAllWindowsNoSubdomain: activeBaseKey
+      ? domainTabs.filter((tab) => getMoveKey(tab.url, true) === activeBaseKey).length
+      : 0,
+    moveUngroupedCurrentWindow: currentEligible.length,
+    bringToWindow: tabs.filter((tab) => tab.windowId !== currentWindow.id).length,
+    closeDomainCurrentWindow: activeKey
+      ? currentDomainTabs.filter((tab) => getMoveKey(tab.url) === activeKey).length
+      : 0,
+    closeDomainAllWindows: activeKey
+      ? domainTabs.filter((tab) => getMoveKey(tab.url) === activeKey).length
+      : 0,
+    findMediaPlaying: tabs.filter((tab) => tab.audible).length,
+  };
 }
 
 // Helper functions for Chrome API promises
@@ -494,17 +627,17 @@ async function getActiveTabDomain() {
   return activeTab ? extractDomain(activeTab.url) : null;
 }
 
-async function getTargetMoveKey(domain) {
+async function getTargetMoveKey(domain, ignoreSubdomain = false) {
   const [activeTab] = await queryTabs({ active: true, currentWindow: true });
   if (activeTab) {
-    return getMoveKey(activeTab.url);
+    return getMoveKey(activeTab.url, ignoreSubdomain);
   }
 
   return domain || null;
 }
 
-function getMoveKey(url) {
-  return getGroupingKey(url, false);
+function getMoveKey(url, ignoreSubdomain = false) {
+  return getGroupingKey(url, ignoreSubdomain);
 }
 
 function moveTabs(tabIds, moveProperties) {

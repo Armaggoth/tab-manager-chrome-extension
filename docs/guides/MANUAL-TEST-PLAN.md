@@ -24,6 +24,48 @@ The following features have passed manual Chrome validation:
 
 Remaining browser validation includes Remove Duplicates, the move and close operations, Find Media Playing, and Google Vids/Drawings coverage.
 
+## Implemented UI Enhancements
+
+- Usage-count numbers are hidden beside actions in both the popup and side panel; usage statistics remain available in Settings.
+- The number of tabs that would be affected appears directly on each action button, using the active settings and window context.
+- The affected-tab count is omitted when an action would affect zero tabs.
+- Refresh affected-tab counts when relevant tabs or the Ignore Pinned Tabs setting changes.
+- A clear visual cue appears in both UIs when the Ignore Pinned Tabs setting is enabled.
+
+## Implemented Move Enhancement
+
+- Both Move Domain (Current Window, No Subdomain) and Move Domain (All Windows, No Subdomain) are separate visible buttons.
+- They reuse the existing no-subdomain matching logic, including the Google Docs editor-type rules, so domain classification remains DRY.
+
+Manual Chrome validation for these actions remains part of the release checklist.
+
+## Planned UI Enhancements
+
+Error and success feedback is intentionally deferred until the core UI and move features are complete.
+
+The Operations UI should support two user-selectable modes:
+
+- The current text-based layout, improved with a more visual and user-friendly horizontal arrangement.
+- A separate icon-based layout with fewer actions, configurable by most-used ordering or explicit user selection in Settings.
+
+The text-based layout improvements require research into Chrome extension UI best practices before implementation.
+
+The app should gain all four planned views: Operations, Stats, Settings, and About.
+
+Operations remains the main popup and side-panel view. Stats, Settings, and About should be tabs inside the settings window.
+
+The About tab should include version, description, permissions, privacy, and documentation first. Feedback and changelog details are deferred.
+
+Packaging is deferred until the remaining features and Chrome validation are complete.
+
+Chrome Web Store preparation is also deferred until the feature work is complete.
+
+Continue using the current Node test suite and manual Chrome validation for now. Evaluate Playwright after the feature work is complete.
+
+Action visibility customization is deferred; all actions should remain visible in both UIs for now.
+
+The toolbar badge is deferred because it is currently unclear whether its number should represent tabs, windows, or a selected action context.
+
 ## Test Fixture
 
 For move-window testing, you can open a disposable Chrome profile with the extension loaded and two prepared windows:

@@ -11,11 +11,13 @@ You've successfully created the following project structure:
 - **service-worker.js** - Background service worker with tab-operation handlers and utilities
   - `extractDomain(url, ignoreSubdomain)` - Extract domain from URL
   - `detectGoogleDocsType(url)` - Detect Google Docs type from URL
+  - `extractGoogleDocsId(url)` - Extract a Google document ID from a URL
 
 #### User Interface
-- **side-panel.html** - Main side panel interface with semantic HTML and ARIA labels
+- **side-panel.html** - Main side panel Operations interface with semantic HTML and ARIA labels
 - **side-panel.css** - Responsive styles with accessibility support (dark mode, high contrast, reduced motion)
 - **side-panel.js** - Side panel logic and event handlers
+- **popup.html/js/css** - Popup Operations interface and shared access mode
 
 #### Settings & Options
 - **options.html** - Settings page with accessibility features
@@ -32,7 +34,7 @@ You've successfully created the following project structure:
 
 #### Project Files
 - **.gitignore** - Git ignore patterns
-- **assets/.gitkeep** - Assets directory placeholder
+- **assets/** - Runtime icons and the transparent pinned-tab cue
 
 ## Step 2: Install & Test Locally
 
@@ -44,9 +46,9 @@ You've successfully created the following project structure:
 
 ## Step 3: Test Core Logic
 
-The service worker now handles the main tab operations, including sorting, grouping, duplicate removal, moving, closing, bringing tabs between windows, and finding media-playing tabs. Use [docs/guides/MANUAL-TEST-PLAN.md](docs/guides/MANUAL-TEST-PLAN.md) to validate each operation with the relevant settings enabled.
+The service worker now handles the main tab operations, including sorting, grouping, duplicate removal, exact-domain and no-subdomain moving, closing, bringing tabs between windows, and finding media-playing tabs. Use [docs/guides/MANUAL-TEST-PLAN.md](docs/guides/MANUAL-TEST-PLAN.md) to validate each operation with the relevant settings enabled.
 
-The side panel also includes an explicit **Group Google Docs by Type** action for Google Docs, Sheets, Slides, and Forms.
+The popup and side panel share an explicit **Group Google Docs by Type** action for Google Docs, Sheets, Slides, Forms, Vids, and Drawings. Action buttons display affected-tab counts, and the pinned-tab cue appears when pinned tabs are ignored.
 
 ## Step 4: Manual Validation
 
@@ -58,7 +60,7 @@ The current icon assets are already available in `/assets/`:
 - `icon-16.png` (16x16)
 - `icon-48.png` (48x48)
 - `icon-128.png` (128x128)
-- `default-favicon.png` (fallback favicon)
+- `no-pin.png` (transparent pinned-tab ignored cue)
 
 ## Accessibility Features Included
 

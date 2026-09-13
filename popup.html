@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tab Manager</title>
+    <link rel="stylesheet" href="side-panel.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="container" role="main">
+      <header>
+        <h1 id="app-title">Tab Manager</h1>
+        <img
+          id="pinned-tabs-ignored-cue"
+          class="pinned-tabs-ignored-cue"
+          src="assets/no-pin.png"
+          alt="Pinned tabs are ignored"
+          title="Pinned tabs are ignored by tab actions"
+          aria-label="Pinned tabs are ignored by tab actions"
+          hidden
+        />
+      </header>
+
+      <section aria-label="Actions">
+        <div id="usage-suggestion" class="usage-suggestion" role="status" hidden>
+          <p id="usage-suggestion-message"></p>
+          <div class="usage-suggestion-actions">
+            <button id="usage-suggestion-sort" class="btn btn-primary">Sort by Usage</button>
+            <button id="usage-suggestion-later" class="btn btn-secondary">Not Now</button>
+            <button id="usage-suggestion-disable" class="btn btn-secondary">Don't Ask</button>
+          </div>
+        </div>
+        <div id="actions-grid" class="actions-grid" role="group" aria-label="Tab management actions"></div>
+      </section>
+
+      <footer>
+        <button
+          id="settings-btn"
+          class="btn btn-small"
+          aria-label="Open settings"
+          title="Open extension settings"
+        >
+          ⚙️ Settings
+        </button>
+      </footer>
+    </div>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

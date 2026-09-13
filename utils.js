@@ -17,6 +17,29 @@ export function extractDomain(url, ignoreSubdomain = false) {
   }
 }
 
+// Standard URL schemes that carry no meaningful hostname (no "domain" to group/sort by).
+const KNOWN_PROTOCOLS = {
+  'file:': { key: 'file', label: 'Local Files' },
+  'about:': { key: 'about', label: 'Browser Pages' },
+  'data:': { key: 'data', label: 'Data URIs' },
+  'blob:': { key: 'blob', label: 'Blob URLs' },
+  'view-source:': { key: 'view-source', label: 'View Source' },
+  'filesystem:': { key: 'filesystem', label: 'File System' },
+  'mailto:': { key: 'mailto', label: 'Mail Links' },
+  'tel:': { key: 'tel', label: 'Phone Links' },
+  'javascript:': { key: 'javascript', label: 'Script Links' },
+};
+
+// Looks up a friendly key/label for hostname-less protocols (e.g. file://, about:).
+export function getKnownProtocolInfo(url) {
+  try {
+    const { protocol } = new URL(url);
+    return KNOWN_PROTOCOLS[protocol] || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 export function extractGoogleDocsId(url) {
   try {
     const urlObj = new URL(url);
@@ -119,7 +142,7 @@ export function getGroupingKey(url, ignoreSubdomain = false) {
       return `google:unknown:${editorSlug.toLowerCase()}`;
     }
 
-    return extractDomain(url, ignoreSubdomain) || 'unknown';
+    return extractDomain(url, ignoreSubdomain) || getKnownProtocolInfo(url)?.key || 'unknown';
   } catch (e) {
     return 'unknown';
   }
@@ -142,5 +165,158 @@ export function getGroupingLabel(url, ignoreSubdomain = false) {
     }
   }
 
-  return extractDomain(url, ignoreSubdomain) || 'unknown';
+  return extractDomain(url, ignoreSubdomain) || getKnownProtocolInfo(url)?.label || 'unknown';
 }
+
+// Shared action -> display label map, used by both the side panel/popup and the
+// Settings "Usage" tab so feature names stay consistent everywhere.
+export const ACTION_LABELS = {
+  sortByDomain: 'Sort by Domain',
+  groupByDomain: 'Group by Domain',
+  groupByDomainNoSubdomain: 'Group by Domain (No Subdomain)',
+  groupGoogleDocsByType: 'Group Google Docs by Type',
+  ungroup: 'Ungroup',
+  removeDuplicates: 'Remove Duplicates',
+  moveDomainCurrentWindow: 'Move Domain to New Window (Current Window)',
+  moveDomainAllWindows: 'Move Domain to New Window (All Windows)',
+  moveDomainCurrentWindowNoSubdomain: 'Move Base Domain to New Window (Current Window)',
+  moveDomainAllWindowsNoSubdomain: 'Move Base Domain to New Window (All Windows)',
+  moveUngroupedCurrentWindow: 'Move Ungrouped to New Window',
+  bringToWindow: 'Bring All to This Window',
+  closeDomainCurrentWindow: 'Close Domain (Current Window)',
+  closeDomainAllWindows: 'Close Domain (All Windows)',
+  findMediaPlaying: 'Find Media Playing',
+};
+
+export const ACTION_GROUPS = [
+  {
+    title: 'Sort & Group',
+    actions: [
+      {
+        key: 'sortByDomain',
+        id: 'sort-by-domain',
+        ariaLabel: 'Sort tabs by domain',
+        title: 'Sort tabs alphabetically by domain',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'groupByDomain',
+        id: 'group-by-domain',
+        ariaLabel: 'Group tabs by domain',
+        title: 'Group tabs by their domain',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'groupByDomainNoSubdomain',
+        id: 'group-by-domain-ignore-subdomain',
+        ariaLabel: 'Group tabs by domain ignoring subdomains',
+        title: 'Group tabs by domain (e.g., example.com)',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'groupGoogleDocsByType',
+        id: 'group-google-docs-by-type',
+        ariaLabel: 'Group Google Docs tabs by document type',
+        title: 'Group Google Docs, Sheets, Slides, and Forms tabs by type',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'ungroup',
+        id: 'ungroup',
+        ariaLabel: 'Ungroup tabs',
+        title: 'Ungroup all grouped tabs',
+        buttonClass: 'btn-secondary',
+      },
+    ],
+  },
+  {
+    title: 'Clean Up',
+    actions: [
+      {
+        key: 'removeDuplicates',
+        id: 'remove-duplicates',
+        ariaLabel: 'Remove duplicate tabs',
+        title: 'Close duplicate tabs keeping one per URL',
+        buttonClass: 'btn-secondary',
+      },
+    ],
+  },
+  {
+    title: 'Move Tabs',
+    actions: [
+      {
+        key: 'moveDomainCurrentWindow',
+        id: 'move-domain-current-window',
+        ariaLabel: 'Move current-window tabs from this domain to a new window',
+        title: 'Move every tab from the active tab\'s domain in this window to a new window',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'moveDomainAllWindows',
+        id: 'move-domain-all-windows',
+        ariaLabel: 'Move tabs from this domain in all windows to a new window',
+        title: 'Move every tab from the active tab\'s domain in all windows to a new window',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'moveDomainCurrentWindowNoSubdomain',
+        id: 'move-domain-current-window-no-subdomain',
+        ariaLabel: 'Move current-window tabs from this base domain to a new window',
+        title: 'Move every tab from the active tab\'s base domain in this window to a new window',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'moveDomainAllWindowsNoSubdomain',
+        id: 'move-domain-all-windows-no-subdomain',
+        ariaLabel: 'Move tabs from this base domain in all windows to a new window',
+        title: 'Move every tab from the active tab\'s base domain in all windows to a new window',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'moveUngroupedCurrentWindow',
+        id: 'move-ungrouped-current-window',
+        ariaLabel: 'Move ungrouped current-window tabs to a new window',
+        title: 'Move every ungrouped tab in this window to a new window',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'bringToWindow',
+        id: 'bring-to-window',
+        ariaLabel: 'Move tabs from all other windows to this window',
+        title: 'Move every tab from other windows into this window',
+        buttonClass: 'btn-secondary',
+      },
+    ],
+  },
+  {
+    title: 'Search & Focus',
+    actions: [
+      {
+        key: 'findMediaPlaying',
+        id: 'find-media-playing',
+        ariaLabel: 'Find media playing',
+        title: 'Focus the tab currently playing audio or video',
+        buttonClass: 'btn-secondary',
+      },
+    ],
+  },
+  {
+    title: 'Close Tabs',
+    actions: [
+      {
+        key: 'closeDomainCurrentWindow',
+        id: 'close-domain-current-window',
+        ariaLabel: 'Close domain tabs from current window',
+        title: 'Close all tabs with selected domain in current window',
+        buttonClass: 'btn-danger',
+      },
+      {
+        key: 'closeDomainAllWindows',
+        id: 'close-domain-all-windows',
+        ariaLabel: 'Close domain tabs from all windows',
+        title: 'Close all tabs with selected domain from all windows',
+        buttonClass: 'btn-danger',
+      },
+    ],
+  },
+];

@@ -4,6 +4,7 @@ This folder contains documentation about Tab Manager's UI design, patterns, and 
 
 ## Contents
 
+- [Spec 001: Operations UI Modes](../specs/spec001/README.md) - Self-contained P1 specification for the Text/Icons Operations mode setting
 - **Coming Soon**: UI component patterns
 - **Coming Soon**: Design system
 - **Coming Soon**: Accessibility guidelines
@@ -13,7 +14,7 @@ This folder contains documentation about Tab Manager's UI design, patterns, and 
 
 ## Recommended UI Structure
 
-Based on research and best practices, the following is the planned post-MVP UI reorganization. The current side panel remains a single responsive, scrollable action view:
+Based on research and best practices, the following describes the current Operations UI and the planned post-MVP redesign. Operations is currently a shared responsive action view available in the popup and side panel:
 
 ### Planned Interface Direction: Popup + Side Panel Modes
 
@@ -21,11 +22,11 @@ Adopt a compact action interface similar to **Extract Tabs - Domain**, while kee
 
 **Goal**: Let the user choose whether the primary interface opens as a toolbar popup or as the existing Chrome side panel.
 
-**Default proposal**:
+**Current behavior**:
 - Use the toolbar popup as the fast-access interface for common actions.
 - Keep the side panel as the expanded workspace for longer task flows, settings access, and future tab overview utilities.
-- Store the preferred launch mode in `chrome.storage.sync`, for example `interfaceMode: "popup" | "sidePanel"`.
-- Let the user configure which actions appear in each display mode, for example `visibleActions.popup` and `visibleActions.sidePanel`.
+- Store the selected launch mode in `chrome.storage.sync` through the existing `accessMode` setting.
+- See [Spec 001: Operations UI Modes](../specs/spec001/README.md) for the presentation-mode, action-set, and action-visibility decisions.
 
 **Primary popup layout**:
 - Header with extension name and optional current-domain context.
@@ -51,7 +52,7 @@ Adopt a compact action interface similar to **Extract Tabs - Domain**, while kee
 - Settings view:
 	- Keep current behavior settings, including Ignore Pinned Tabs and Detect Duplicate Google Docs.
 	- Add interface launch mode: Popup or Side Panel.
-	- Add per-mode action visibility controls for popup and side panel.
+	- See [Spec 001: Operations UI Modes](../specs/spec001/README.md) for Operations presentation and visibility configuration.
 	- Add badge settings for color, scope, and whether the badge shows affected-window counts.
 - About view:
 	- Show extension name, version from `manifest.json`, and a one-sentence purpose statement.
@@ -92,19 +93,14 @@ Adopt a compact action interface similar to **Extract Tabs - Domain**, while kee
 - Allow more breathing room for future utilities like tab search, duplicate review, domain stats, and visible result summaries.
 - Keep destructive actions visually distinct and confirmation-gated.
 
-**Per-mode action visibility**:
-- Add configuration for each action so the popup and side panel can show different subsets.
-- Default popup actions should favor fast, common tasks such as Move Domain, Remove Duplicates, and Bring All to This Window.
-- Default side-panel actions should include the complete operation set unless the user hides specific actions.
-- Store visibility preferences by stable action IDs rather than display text, so localization does not affect settings.
-- Keep hidden actions available in settings so a user can restore them without resetting all preferences.
+**Operations presentation and visibility**: See [Spec 001: Operations UI Modes](../specs/spec001/README.md).
 
 **Implementation plan**:
 1. Extract shared UI action rendering into reusable markup/style conventions that can be used by both `side-panel.html` and a new `popup.html`.
 2. Add `popup.html`, `popup.js`, and `popup.css` or share the existing side-panel assets if the styles remain compatible.
 3. Update `manifest.json` with `action.default_popup` for popup mode support.
-4. Add an interface-mode setting in the options page.
-5. Add per-display-mode action visibility settings in the options page.
+4. Keep the existing interface-mode setting in the options page.
+5. Implement [Spec 001: Operations UI Modes](../specs/spec001/README.md).
 6. Add a read-only stats/context message in the service worker for active domain/type, counts, totals, and top-level stats.
 7. Add badge calculation helpers and action-icon badge updates using the same context/matching functions as the UI stats.
 8. Implement the Operations view first because it maps directly to validated behavior.
