@@ -86,6 +86,7 @@ P1-P2 are active priorities. P3 is intentionally queued after them. P4-P5 are de
 
 ### P1: Current UI Direction
 
+- [ ] Separate recognized Jira and Confluence tabs that share a hostname, using documented URL paths while preserving domain-only behavior for unknown routes. See [Atlassian Product Classification](../research/06-atlassian-product-classification.md).
 - [ ] Implement [Spec 001: Operations UI Modes](../specs/spec001/README.md)
 - [ ] Improve the text-based Operations UI with a more visual, user-friendly horizontal layout based on researched Chrome extension UI best practices
 

@@ -56,6 +56,14 @@ Tailored analysis and recommendations specific to Tab Manager's 14 operations.
 - Domain selection UX improvements
 - Implementation roadmap
 
+### 6. [Atlassian Product Classification](06-atlassian-product-classification.md)
+Research and implementation plan for grouping Jira and Confluence separately when they share a hostname.
+
+**Key Topics**:
+- Documented Jira and Confluence URL namespaces
+- Path-based classification, fallbacks, and rejected approaches
+- P1 implementation plan and acceptance criteria
+
 ---
 
 ## How to Use This Research

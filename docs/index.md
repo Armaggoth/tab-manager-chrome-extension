@@ -20,6 +20,7 @@ Comprehensive research on UI patterns, accessibility, and design principles.
 - [Progressive Disclosure](research/03-progressive-disclosure.md) – Feature prioritization
 - [Accordions & Collapsible Content](research/04-accordions-collapsible.md) – Expandable patterns
 - [Feature Grouping Strategy](research/05-feature-grouping-strategy.md) – **Recommended for Tab Manager** ⭐
+- [Atlassian Product Classification](research/06-atlassian-product-classification.md) – Jira/Confluence shared-host grouping plan
 
 ### [🎨 Design](design/index.md) – UI Design Decisions
 Design patterns, component specifications, and recommended structure.
@@ -76,6 +77,7 @@ See [Research folder](research/index.md) for full details on each topic.
 | **Progressive Disclosure** | Design Pattern | Feature prioritization, complexity management |
 | **Accordions** | UI Pattern | Collapsible content, usability, accessibility |
 | **Feature Grouping** | Recommendation | **Recommended UI structure for Tab Manager** |
+| **Atlassian Product Classification** | Product detection | Jira and Confluence path-based separation |
 
 ---
 
@@ -115,7 +117,8 @@ docs/
 │   ├── 02-chrome-extension-ui.md
 │   ├── 03-progressive-disclosure.md
 │   ├── 04-accordions-collapsible.md
-│   └── 05-feature-grouping-strategy.md
+│   ├── 05-feature-grouping-strategy.md
+│   └── 06-atlassian-product-classification.md
 ├── design/
 │   └── index.md
 ├── specs/
