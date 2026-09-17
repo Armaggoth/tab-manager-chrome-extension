@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  detectAtlassianProduct,
   detectGoogleDocsType,
   getDomainSortKey,
   getGroupingKey,
@@ -421,6 +422,45 @@ test('uses Google editor type groups for Group by Domain', { concurrency: false 
     'google:presentation'
   );
   assert.equal(getGroupingKey('https://docs.google.com/forms/d/id/edit'), 'google:form');
+});
+
+test('detects Atlassian product by URL path on the same host', { concurrency: false }, () => {
+  assert.equal(detectAtlassianProduct('https://vailresorts.jira.com/wiki/spaces/GXT/pages/5154045963'), 'confluence');
+  assert.equal(detectAtlassianProduct('https://vailresorts.jira.com/browse/GXTD-7520'), 'jira');
+  assert.equal(
+    detectAtlassianProduct('https://hugeinc.atlassian.net/jira/software/c/projects/DII/boards/1462'),
+    'jira'
+  );
+  assert.equal(
+    detectAtlassianProduct('https://herodigital.atlassian.net/jira/for-you?tab=boards'),
+    'jira'
+  );
+  assert.equal(detectAtlassianProduct('https://client.jira.com/secure/Dashboard.jspa'), 'jira');
+  assert.equal(detectAtlassianProduct('https://example.com/jira/software/c/projects/DII/boards/1462'), null);
+  assert.equal(detectAtlassianProduct('https://example.com/'), null);
+});
+
+test('keeps Jira and Confluence separate when hosted on the same domain', { concurrency: false }, () => {
+  assert.equal(
+    getGroupingKey('https://client.jira.com/wiki/spaces/ENG'),
+    'atlassian:confluence:client.jira.com'
+  );
+  assert.equal(
+    getGroupingKey('https://client.jira.com/browse/ENG-123'),
+    'atlassian:jira:client.jira.com'
+  );
+  assert.equal(
+    getGroupingKey('https://client.jira.com/wiki/spaces/ENG', true),
+    'atlassian:confluence:jira.com'
+  );
+  assert.equal(
+    getGroupingLabel('https://client.jira.com/wiki/spaces/ENG'),
+    'Confluence: client.jira.com'
+  );
+  assert.equal(
+    getGroupingLabel('https://client.jira.com/browse/ENG-123'),
+    'Jira: client.jira.com'
+  );
 });
 
 test('collapses all Google editor types for Group by Domain without subdomains', () => {

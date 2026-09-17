@@ -78,6 +78,43 @@ export function detectGoogleDocsType(url) {
   }
 }
 
+export function detectAtlassianProduct(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname.toLowerCase();
+    const segments = pathname.split('/').filter(Boolean);
+    const hostname = urlObj.hostname.toLowerCase();
+    const isAtlassianHost = hostname.endsWith('.atlassian.net') || hostname.endsWith('.jira.com');
+
+    if (segments[0] === 'wiki') {
+      return 'confluence';
+    }
+
+    if (segments[0] === 'browse' && segments[1]) {
+      const issueKey = segments[1];
+      if (/^[a-z][a-z0-9_]*-[0-9]+$/i.test(issueKey)) {
+        return 'jira';
+      }
+    }
+
+    if (segments[0] === 'rest' && segments[1] === 'api') {
+      return 'jira';
+    }
+
+    if (segments[0] === 'jira' && segments.length > 1 && isAtlassianHost) {
+      return 'jira';
+    }
+
+    if (segments[0] === 'secure' && isAtlassianHost) {
+      return 'jira';
+    }
+
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
 export function getDomainSortKey(url) {
   try {
     const urlObj = new URL(url);
@@ -93,6 +130,12 @@ export function getDomainSortKey(url) {
 
       const editorSlug = urlObj.pathname.split('/').find(Boolean) || 'unknown';
       return `docs:${getGoogleDocsTypeSortKey('unknown')}:${editorSlug.toLowerCase()}`;
+    }
+
+    const atlassianProduct = detectAtlassianProduct(url);
+    if (atlassianProduct) {
+      const hostname = extractDomain(url, false) || urlObj.hostname;
+      return `atlassian:${atlassianProduct}:${hostname}`;
     }
 
     const hostname = urlObj.hostname.replace(/^www\./, '');
@@ -142,6 +185,12 @@ export function getGroupingKey(url, ignoreSubdomain = false) {
       return `google:unknown:${editorSlug.toLowerCase()}`;
     }
 
+    const atlassianProduct = detectAtlassianProduct(url);
+    if (atlassianProduct) {
+      const domain = extractDomain(url, ignoreSubdomain) || getKnownProtocolInfo(url)?.key || 'unknown';
+      return `atlassian:${atlassianProduct}:${domain}`;
+    }
+
     return extractDomain(url, ignoreSubdomain) || getKnownProtocolInfo(url)?.key || 'unknown';
   } catch (e) {
     return 'unknown';
@@ -163,6 +212,12 @@ export function getGroupingLabel(url, ignoreSubdomain = false) {
     } catch (e) {
       return 'Google Workspace file';
     }
+  }
+
+  const atlassianProduct = detectAtlassianProduct(url);
+  if (atlassianProduct) {
+    const domain = extractDomain(url, ignoreSubdomain) || 'unknown';
+    return `${atlassianProduct === 'jira' ? 'Jira' : 'Confluence'}: ${domain}`;
   }
 
   return extractDomain(url, ignoreSubdomain) || getKnownProtocolInfo(url)?.label || 'unknown';
