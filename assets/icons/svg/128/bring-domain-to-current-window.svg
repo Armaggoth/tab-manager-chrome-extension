@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs><clipPath id="clip1"><rect x="52" y="12" width="64" height="40" rx="3.2"/></clipPath></defs>
+  <rect x="50.0" y="10.0" width="68" height="44" rx="5.2" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="4"/>
+  <g clip-path="url(#clip1)"><rect x="52" y="12" width="64" height="11.200000000000001" fill="#3B8BE8"/><rect x="52" y="23.200000000000003" width="64" height="2.0" fill="#1B2B4B"/></g>
+  <circle cx="59.84" cy="17.6" r="1.9040000000000004" fill="#FFFFFF"/>
+  <circle cx="66.0" cy="17.6" r="1.9040000000000004" fill="#FFFFFF"/>
+  <circle cx="72.16000000000001" cy="17.6" r="1.9040000000000004" fill="#FFFFFF"/>
+  <path d="M60,60.5 L44.0,60.5 A23.5,23.5 0 0 0 44.0,107.5 L60,107.5" fill="none" stroke="#1B2B4B" stroke-width="25" stroke-linecap="butt" stroke-linejoin="round"/>
+  <path d="M60,60.5 L44.0,60.5 A23.5,23.5 0 0 0 44.0,107.5 L60,107.5" fill="none" stroke="#E5483D" stroke-width="17" stroke-linecap="butt" stroke-linejoin="round"/>
+  <rect x="48" y="52.0" width="12" height="17" fill="#FFFFFF"/>
+  <path d="M48,50.0 L62.0,50.0 M48,71.0 L62.0,71.0 M62.0,48.0 L62.0,73.0" stroke="#1B2B4B" stroke-width="4" fill="none"/>
+  <rect x="48" y="99.0" width="12" height="17" fill="#FFFFFF"/>
+  <path d="M48,97.0 L62.0,97.0 M48,118.0 L62.0,118.0 M62.0,95.0 L62.0,120.0" stroke="#1B2B4B" stroke-width="4" fill="none"/>
+  <rect x="74.0" y="82.0" width="14.0" height="12.0" rx="2.0" fill="#FFC83D" stroke="#1B2B4B" stroke-width="4"/>
+  <rect x="74.0" y="90.0" width="36" height="20.0" rx="2.8" fill="#FFC83D" stroke="#1B2B4B" stroke-width="4"/>
+  <rect x="76.0" y="88.0" width="10.0" height="4" rx="0" fill="#FFC83D"/>
+  <rect x="79.0" y="98.0" width="26" height="5" rx="2.5" fill="#FFE08A"/>
+  <line x1="92" y1="76.8" x2="92.0" y2="67.2" stroke="#1B2B4B" stroke-width="4"/>
+  <polygon points="92,60.8 99.936,73.6 84.064,73.6" fill="#1B2B4B" stroke="#1B2B4B" stroke-width="1.2" stroke-linejoin="round"/>
+</svg>

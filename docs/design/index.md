@@ -5,6 +5,7 @@ This folder contains documentation about Tab Manager's UI design, patterns, and 
 ## Contents
 
 - [Spec 001: Operations UI Modes](../specs/spec001/README.md) - Self-contained P1 specification for the Text/Icons Operations mode setting
+- [Action Icon Prompt Pack](action-icon-prompt-pack.md) - Animal-themed generation prompts mapped to the current action icon assets
 - **Coming Soon**: UI component patterns
 - **Coming Soon**: Design system
 - **Coming Soon**: Accessibility guidelines

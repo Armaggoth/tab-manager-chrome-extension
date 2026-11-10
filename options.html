@@ -43,6 +43,20 @@
               When enabled, the "Remove Duplicates" operation will detect and remove duplicate tabs of the same Google Docs, Sheets, Slides, or Form—even if they're open on different pages or sheets.
             </p>
           </div>
+
+          <div class="setting-group">
+            <label for="badge-enabled" class="checkbox-label">
+              <input
+                type="checkbox"
+                id="badge-enabled"
+                aria-describedby="badge-enabled-description"
+              />
+              <span>Show matching-tab count on the toolbar icon</span>
+            </label>
+            <p id="badge-enabled-description" class="setting-description">
+              When enabled, the toolbar icon shows a badge with the number of tabs, across all windows, from the active tab's domain.
+            </p>
+          </div>
         </section>
 
         <section aria-labelledby="access-mode-heading">
@@ -59,6 +73,24 @@
             </label>
             <p id="access-mode-description" class="setting-description">
               Choose what opens when you click the toolbar icon: the side panel, or a smaller popup dropdown with the same actions.
+            </p>
+          </div>
+        </section>
+
+        <section aria-labelledby="operations-mode-heading">
+          <h2 id="operations-mode-heading" data-i18n="operationsDisplay">Operations Display</h2>
+          <div class="setting-group" role="radiogroup" aria-labelledby="operations-mode-heading">
+            <label for="operations-mode-text" class="checkbox-label">
+              <input type="radio" id="operations-mode-text" name="operations-ui-mode" value="text" />
+              <span data-i18n="textMode">Text</span>
+            </label>
+            <label for="operations-mode-icons" class="checkbox-label">
+              <input type="radio" id="operations-mode-icons" name="operations-ui-mode" value="icons" />
+              <img class="mode-preview-icon" src="assets/icons/16/sort-by-domain.png" alt="" />
+              <span data-i18n="iconsMode">Icons</span>
+            </label>
+            <p id="operations-mode-description" class="setting-description">
+              <span data-i18n="operationsDisplayDescription">Choose a sectioned action list or a tabbed view with action icons.</span>
             </p>
           </div>
         </section>

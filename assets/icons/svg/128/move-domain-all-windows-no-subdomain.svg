@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs><clipPath id="clip1"><rect x="76" y="12" width="40" height="24" rx="3.2"/></clipPath><clipPath id="clip2"><rect x="76" y="52" width="40" height="24" rx="3.2"/></clipPath><clipPath id="clip3"><rect x="76" y="92" width="40" height="24" rx="3.2"/></clipPath></defs>
+  <rect x="17.2" y="42.8" width="14.0" height="16.0" rx="2.0" fill="#F4B731" stroke="#1B2B4B" stroke-width="4"/>
+  <rect x="17.2" y="50.8" width="36" height="28.0" rx="2.8" fill="#F4B731" stroke="#1B2B4B" stroke-width="4"/>
+  <rect x="19.2" y="48.8" width="10.0" height="4" rx="0" fill="#F4B731"/>
+  <rect x="22.2" y="58.8" width="26" height="5" rx="2.5" fill="#FFE08A"/>
+  <rect x="10.0" y="50.0" width="14.0" height="16.0" rx="2.0" fill="#FFC83D" stroke="#1B2B4B" stroke-width="4"/>
+  <rect x="10.0" y="58.0" width="36" height="28.0" rx="2.8" fill="#FFC83D" stroke="#1B2B4B" stroke-width="4"/>
+  <rect x="12.0" y="56.0" width="10.0" height="4" rx="0" fill="#FFC83D"/>
+  <rect x="15.0" y="66.0" width="26" height="5" rx="2.5" fill="#FFE08A"/>
+  <rect x="74.0" y="10.0" width="44" height="28" rx="5.2" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="4"/>
+  <g clip-path="url(#clip1)"><rect x="76" y="12" width="40" height="6.720000000000001" fill="#3B8BE8"/><rect x="76" y="18.72" width="40" height="2.0" fill="#1B2B4B"/></g>
+  <circle cx="80.704" cy="15.36" r="1.1424" fill="#FFFFFF"/>
+  <circle cx="84.39999999999999" cy="15.36" r="1.1424" fill="#FFFFFF"/>
+  <circle cx="88.09599999999999" cy="15.36" r="1.1424" fill="#FFFFFF"/>
+  <rect x="74.0" y="50.0" width="44" height="28" rx="5.2" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="4"/>
+  <g clip-path="url(#clip2)"><rect x="76" y="52" width="40" height="6.720000000000001" fill="#3B8BE8"/><rect x="76" y="58.72" width="40" height="2.0" fill="#1B2B4B"/></g>
+  <circle cx="80.704" cy="55.36" r="1.1424" fill="#FFFFFF"/>
+  <circle cx="84.39999999999999" cy="55.36" r="1.1424" fill="#FFFFFF"/>
+  <circle cx="88.09599999999999" cy="55.36" r="1.1424" fill="#FFFFFF"/>
+  <rect x="74.0" y="90.0" width="44" height="28" rx="5.2" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="4"/>
+  <g clip-path="url(#clip3)"><rect x="76" y="92" width="40" height="6.720000000000001" fill="#3B8BE8"/><rect x="76" y="98.72" width="40" height="2.0" fill="#1B2B4B"/></g>
+  <circle cx="80.704" cy="95.36" r="1.1424" fill="#FFFFFF"/>
+  <circle cx="84.39999999999999" cy="95.36" r="1.1424" fill="#FFFFFF"/>
+  <circle cx="88.09599999999999" cy="95.36" r="1.1424" fill="#FFFFFF"/>
+  <line x1="52.0" y1="68.0" x2="67.22309967133373" y2="29.94225082166566" stroke="#1B2B4B" stroke-width="4"/>
+  <polygon points="69.6,24 72.21459036153288,38.831858050877486 57.477808323802044,32.93714523578515" fill="#1B2B4B" stroke="#1B2B4B" stroke-width="1.2" stroke-linejoin="round"/>
+  <line x1="52.0" y1="68.0" x2="63.35914972293465" y2="65.4183750629694" stroke="#1B2B4B" stroke-width="4"/>
+  <polygon points="69.6,64 58.87708452395136,74.57540446949982 55.35951436778726,59.09809578237777" fill="#1B2B4B" stroke="#1B2B4B" stroke-width="1.2" stroke-linejoin="round"/>
+  <line x1="52.0" y1="68.0" x2="66.78905515516836" y2="98.2503400901171" stroke="#1B2B4B" stroke-width="4"/>
+  <polygon points="69.6,104 56.848532022081955,95.98625178782545 71.10768859859151,89.015108572643" fill="#1B2B4B" stroke="#1B2B4B" stroke-width="1.2" stroke-linejoin="round"/>
+</svg>

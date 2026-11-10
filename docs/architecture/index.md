@@ -5,7 +5,7 @@ This folder contains documentation about Tab Manager's technical architecture an
 ## Contents
 
 - [Undo Feature Plan](undo-feature.md) – Planned undo/redo design for the last 20 actions
-- [Feature Usage Tracking](feature-usage-tracking.md) – Implemented usage stats, threshold suggestion, and menu reordering
+- [Feature Usage Tracking](feature-usage-tracking.md) – Usage stats, Most Used actions, and persistent manual pinning
 - **Coming Soon**: Service worker implementation patterns
 - **Coming Soon**: Message passing architecture
 - **Coming Soon**: Tab API usage patterns

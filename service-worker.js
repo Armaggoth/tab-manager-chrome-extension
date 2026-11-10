@@ -22,14 +22,61 @@ async function applyAccessMode() {
   await chrome.action.setPopup({ popup: accessMode === 'popup' ? 'popup.html' : '' });
 }
 
+// Toolbar badge: count of tabs matching the active tab's domain across all windows,
+// mirroring the "all windows" domain move/close matching rules (grouped tabs included).
+async function updateBadge() {
+  try {
+    const settings = await getSettings();
+    if (!settings.badgeEnabled) {
+      await setBadgeText('');
+      return;
+    }
+
+    const counts = await getAffectedTabCounts(settings);
+    const count = counts.closeDomainAllWindows;
+    const text = count > 9 ? '9+' : count > 0 ? String(count) : '';
+    await setBadgeText(text);
+  } catch (error) {
+    console.error('Error updating badge:', error);
+  }
+}
+
+function setBadgeText(text) {
+  return new Promise((resolve) => {
+    chrome.action.setBadgeText({ text }, () => resolve());
+  });
+}
+
+async function applyBadgeAppearance() {
+  await chrome.action.setBadgeBackgroundColor({ color: '#3B82F6' });
+}
+
 chrome.runtime.onInstalled.addListener(applyAccessMode);
 chrome.runtime.onStartup.addListener(applyAccessMode);
+chrome.runtime.onInstalled.addListener(applyBadgeAppearance);
+chrome.runtime.onStartup.addListener(applyBadgeAppearance);
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'sync' && changes.accessMode) {
     applyAccessMode();
   }
+  if (area === 'sync' && (changes.ignorePinnedTabs || changes.badgeEnabled)) {
+    updateBadge();
+  }
+});
+chrome.tabs.onActivated.addListener(updateBadge);
+chrome.tabs.onCreated.addListener(updateBadge);
+chrome.tabs.onRemoved.addListener(updateBadge);
+chrome.tabs.onUpdated.addListener(updateBadge);
+chrome.tabs.onMoved.addListener(updateBadge);
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  if (windowId !== chrome.windows.WINDOW_ID_NONE) {
+    return updateBadge();
+  }
 });
 applyAccessMode();
+applyBadgeAppearance();
+updateBadge();
+
 
 // Message listener for tab operations
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -77,8 +124,17 @@ async function handleMessage(request, sender, sendResponse) {
       case 'moveUngroupedCurrentWindow':
         changed = await moveUngroupedCurrentWindow(settings);
         break;
+      case 'moveActiveTabToNewWindow':
+        changed = await moveActiveTabToNewWindow(settings);
+        break;
+      case 'bringDomainToCurrentWindow':
+        changed = await bringDomainToCurrentWindow(settings, request.domain, false);
+        break;
+      case 'bringDomainToCurrentWindowNoSubdomain':
+        changed = await bringDomainToCurrentWindow(settings, request.domain, true);
+        break;
       case 'bringToWindow':
-        changed = await bringAllToCurrentWindow(settings);
+        changed = await bringAllToCurrentWindow(settings, request);
         break;
       case 'closeDomainCurrentWindow':
         changed = await closeDomainCurrentWindow(settings, request.domain);
@@ -123,6 +179,7 @@ function getSettings() {
       {
         ignorePinnedTabs: true,
         detectDuplicateGoogleDocs: true,
+        badgeEnabled: true,
       },
       (items) => {
         resolve(items);
@@ -396,8 +453,14 @@ async function ungroupTabs(settings) {
 
 // Remove duplicate tabs
 async function removeDuplicates(settings) {
+  const [activeTab] = await queryTabs({ active: true, currentWindow: true });
   const tabs = await queryTabs({});
   const filtered = filterTabs(tabs, settings);
+  if (activeTab) {
+    filtered.sort(
+      (left, right) => Number(right.id === activeTab.id) - Number(left.id === activeTab.id)
+    );
+  }
 
   const seen = new Map(); // url or docId -> first tab's id
   const toRemove = [];
@@ -474,30 +537,105 @@ async function moveUngroupedCurrentWindow(settings) {
   return true;
 }
 
-// Bring all tabs from other windows to current window
-async function bringAllToCurrentWindow(settings) {
+async function moveActiveTabToNewWindow(settings) {
+  const [activeTab] = await queryTabs({ active: true, currentWindow: true });
+  if (!activeTab || (settings.ignorePinnedTabs && activeTab.pinned)) return false;
+
+  await moveTabsToNewWindow([activeTab.id]);
+  return true;
+}
+
+// Bring matching domain tabs from other windows to the current window.
+async function bringDomainToCurrentWindow(settings, domain, ignoreSubdomain) {
+  const targetMoveKey = await getTargetMoveKey(domain, ignoreSubdomain);
+  if (!targetMoveKey) return false;
+
   const currentWindow = await chrome.windows.getCurrent();
-  const allTabs = await queryTabs({});
-  const otherWindowTabs = allTabs.filter((tab) => tab.windowId !== currentWindow.id);
-  const otherWindowPinnedTabs = otherWindowTabs.filter((tab) => tab.pinned);
-  const otherWindowUnpinnedTabs = otherWindowTabs.filter((tab) => !tab.pinned);
+  const tabs = await queryTabs({});
+  const matchingTabs = filterDomainActionTabs(tabs, settings).filter(
+    (tab) =>
+      tab.windowId !== currentWindow.id &&
+      getMoveKey(tab.url, ignoreSubdomain) === targetMoveKey
+  );
 
-  if (otherWindowTabs.length === 0) return false;
+  if (matchingTabs.length === 0) return false;
 
-  if (otherWindowPinnedTabs.length > 0) {
-    const pinnedTabIds = otherWindowPinnedTabs.map((tab) => tab.id);
+  const pinnedTabIds = matchingTabs.filter((tab) => tab.pinned).map((tab) => tab.id);
+  const unpinnedTabIds = matchingTabs.filter((tab) => !tab.pinned).map((tab) => tab.id);
+
+  if (pinnedTabIds.length > 0) {
     await moveTabs(pinnedTabIds, { windowId: currentWindow.id, index: -1 });
-
     for (const tabId of pinnedTabIds) {
       await updateTab(tabId, { pinned: true });
     }
   }
 
-  if (otherWindowUnpinnedTabs.length > 0) {
-    const unpinnedTabIds = otherWindowUnpinnedTabs.map((tab) => tab.id);
+  if (unpinnedTabIds.length > 0) {
     await moveTabs(unpinnedTabIds, { windowId: currentWindow.id, index: -1 });
   }
 
+  return true;
+}
+
+// Bring all tabs from other windows to current window
+async function bringAllToCurrentWindow(settings, request) {
+  const destinationWindowId = request.windowId ?? (await chrome.windows.getCurrent()).id;
+  const allTabs = await queryTabs({});
+  const destinationActiveTab = allTabs.find(
+    (tab) => tab.windowId === destinationWindowId &&
+      (request.activeTabId === undefined ? tab.active : tab.id === request.activeTabId)
+  );
+  if (request.activeTabId !== undefined && !destinationActiveTab) {
+    throw new Error('The original destination tab is no longer in its window.');
+  }
+  const otherWindowTabs = allTabs.filter((tab) => tab.windowId !== destinationWindowId);
+
+  if (otherWindowTabs.length === 0) return false;
+
+  const sourceWindowIds = [...new Set(otherWindowTabs.map((tab) => tab.windowId))];
+  for (const sourceWindowId of sourceWindowIds) {
+    const sourceWindowTabs = otherWindowTabs.filter((tab) => tab.windowId === sourceWindowId);
+    const movedGroupIds = new Set();
+    const moveUnits = [];
+    for (const tab of sourceWindowTabs) {
+      if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
+        if (movedGroupIds.has(tab.groupId)) continue;
+        movedGroupIds.add(tab.groupId);
+        moveUnits.push({
+          groupId: tab.groupId,
+          active: sourceWindowTabs.some(
+            (member) => member.groupId === tab.groupId && member.active
+          ),
+        });
+      } else {
+        moveUnits.push({ tab, active: Boolean(tab.active) });
+      }
+    }
+
+    moveUnits.sort((left, right) =>
+      Number(left.active) - Number(right.active) ||
+      Number(Boolean(right.tab?.pinned)) - Number(Boolean(left.tab?.pinned))
+    );
+    for (const unit of moveUnits) {
+      if (unit.groupId !== undefined) {
+        await chrome.tabGroups.move(unit.groupId, { windowId: destinationWindowId, index: -1 });
+      } else {
+        await moveTabs([unit.tab.id], { windowId: destinationWindowId, index: -1 });
+        if (unit.tab.pinned) {
+          await updateTab(unit.tab.id, { pinned: true });
+        }
+      }
+
+      if (unit.active && destinationActiveTab) {
+        await updateTab(destinationActiveTab.id, { active: true });
+      }
+    }
+  }
+
+  if (destinationActiveTab) {
+    await updateTab(destinationActiveTab.id, { active: true });
+  }
+  await chrome.windows.update(destinationWindowId, { focused: true });
   return true;
 }
 
@@ -604,6 +742,17 @@ async function getAffectedTabCounts(settings) {
       ? domainTabs.filter((tab) => getMoveKey(tab.url, true) === activeBaseKey).length
       : 0,
     moveUngroupedCurrentWindow: currentEligible.length,
+    moveActiveTabToNewWindow: activeTab && !(settings.ignorePinnedTabs && activeTab.pinned) ? 1 : 0,
+    bringDomainToCurrentWindow: activeKey
+      ? domainTabs.filter(
+          (tab) => tab.windowId !== currentWindow.id && getMoveKey(tab.url) === activeKey
+        ).length
+      : 0,
+    bringDomainToCurrentWindowNoSubdomain: activeBaseKey
+      ? domainTabs.filter(
+          (tab) => tab.windowId !== currentWindow.id && getMoveKey(tab.url, true) === activeBaseKey
+        ).length
+      : 0,
     bringToWindow: tabs.filter((tab) => tab.windowId !== currentWindow.id).length,
     closeDomainCurrentWindow: activeKey
       ? currentDomainTabs.filter((tab) => getMoveKey(tab.url) === activeKey).length

@@ -2,7 +2,7 @@
 
 ## Tab Manager Operations Analysis
 
-### Current Operations (14 total)
+### Current Operations (15 total)
 
 #### Group 1: Organization & Sorting
 1. Sort tabs by domain
@@ -22,24 +22,25 @@ Existing tab groups are user-owned organization. Normal sorting and grouping alw
 #### Group 2: Movement & Relocation
 6. Move domain tabs (current window) → new window
 7. Move domain tabs (all windows) → new window
-8. Bring all tabs to current window
+8. Move the active tab → new window
+9. Bring all tabs to current window
 
 **Characteristics**: Move tabs between windows
 
 #### Group 3: Duplicate Management
-9. Remove duplicates
+10. Remove duplicates
 
 **Characteristics**: Clean up redundant content
 
 #### Group 4: Cleanup & Closing
-10. Close domain tabs (current window)
-11. Close domain tabs (all windows)
+11. Close domain tabs (current window)
+12. Close domain tabs (all windows)
 
 **Characteristics**: Remove tabs from active browsing
 
 #### Group 5: Search & Focus
-12. Find media playing
-13. (Future: Jump to tab, search tabs, etc.)
+13. Find media playing
+14. (Future: Jump to tab, search tabs, etc.)
 
 **Characteristics**: Locate and focus specific tabs
 

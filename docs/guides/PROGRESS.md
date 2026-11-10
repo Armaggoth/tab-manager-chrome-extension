@@ -86,15 +86,16 @@ P1-P2 are active priorities. P3 is intentionally queued after them. P4-P5 are de
 
 ### P1: Current UI Direction
 
-- [ ] Separate recognized Jira and Confluence tabs that share a hostname, using documented URL paths while preserving domain-only behavior for unknown routes. See [Atlassian Product Classification](../research/06-atlassian-product-classification.md).
+- [x] Separate recognized Jira and Confluence tabs that share a hostname, using documented URL paths while preserving domain-only behavior for unknown routes. See [Atlassian Product Classification](../research/06-atlassian-product-classification.md).
 - [ ] Implement [Spec 001: Operations UI Modes](../specs/spec001/README.md)
 - [ ] Improve the text-based Operations UI with a more visual, user-friendly horizontal layout based on researched Chrome extension UI best practices
 
 ### P2: Configurable Operations
 
-- [ ] Build the icon-based Operations UI with a smaller configurable action set, supporting most-used ordering or explicit user selection in Settings
+- [ ] Add optional 16x16 action icons beside labels in Text mode as a separate future feature; see [Spec 001](../specs/spec001/README.md#separate-future-feature-text-mode-icons)
 - [ ] Add an Operations configuration tab with a checkbox for every action, allowing users to show or hide it in the popup and side-panel UI
 - [ ] Suggest hiding least-used actions from the popup and side-panel UI, using the per-action visibility controls above as a prerequisite
+- [x] Allow users to manually pin and unpin actions in the Most Used group independently of usage counts; see [Feature Usage Tracking](../architecture/feature-usage-tracking.md#manual-pins-in-most-used)
 
 ### P3: Settings Completion
 
@@ -105,7 +106,7 @@ P1-P2 are active priorities. P3 is intentionally queued after them. P4-P5 are de
 ### P4: Deferred Polish and Exploration
 
 - [ ] Add error handling/user feedback (toast messages) - deferred until after the core UI and move features
-- [ ] Add configurable toolbar badge showing how many windows would be affected by the active action/domain context - deferred because the badge meaning is currently ambiguous
+- [x] Toolbar badge showing how many tabs across all windows match the active tab's domain (fixed all-windows scope, not yet configurable)
 - [ ] Evaluate local Playwright automation to reduce manual extension reloads - defer; use the current Node tests and manual Chrome validation until feature work is complete
 
 ### P5: Deferred Release Work

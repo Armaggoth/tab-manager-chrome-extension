@@ -39,11 +39,21 @@ export function getSortedUsageEntries(usageStats = {}) {
     });
 }
 
-export function getMostUsedActions(usageStats = {}, limit = 5) {
-  return getSortedUsageEntries(usageStats)
+export function getMostUsedActions(usageStats = {}, limit = 6, pinnedActions = []) {
+  const pinned = [...new Set(pinnedActions)].filter((action) => ACTION_LABELS[action]);
+  const pinnedSet = new Set(pinned);
+  const rankedPins = pinned.sort((actionA, actionB) => {
+    const countDelta = (usageStats[actionB]?.count || 0) - (usageStats[actionA]?.count || 0);
+    if (countDelta !== 0) return countDelta;
+    return ACTION_DISPLAY_ORDER.indexOf(actionA) - ACTION_DISPLAY_ORDER.indexOf(actionB);
+  });
+  const automaticActions = getSortedUsageEntries(usageStats)
     .filter(([, stat]) => (stat?.count || 0) > 0)
-    .slice(0, limit)
+    .filter(([action]) => !pinnedSet.has(action))
+    .slice(0, Math.max(0, limit - rankedPins.length))
     .map(([action]) => action);
+
+  return [...rankedPins, ...automaticActions];
 }
 
 export function getUsageSuggestion(

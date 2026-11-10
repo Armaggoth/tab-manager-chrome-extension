@@ -8,13 +8,13 @@ import {
   renderConfiguredActionGroups,
 } from './panel-actions.js';
 
-await renderConfiguredActionGroups(document.getElementById('actions-grid'));
-
-const buttons = getActionButtons({
-  settings: document.getElementById('settings-btn'),
+const refreshAffectedTabCounts = await initAffectedTabCounts();
+await renderConfiguredActionGroups(document.getElementById('actions-grid'), async () => {
+  const buttons = getActionButtons({
+    settings: document.getElementById('settings-btn'),
+  });
+  initActionButtons(buttons);
+  await refreshAffectedTabCounts();
 });
-
-initActionButtons(buttons);
 initPinnedTabsCue();
-initAffectedTabCounts();
 initUsageSuggestion({ afterSortEnabled: () => location.reload() });

@@ -72,6 +72,51 @@ test('getMostUsedActions ignores zero-count, unknown, and missing actions', () =
   );
 });
 
+test('getMostUsedActions puts usage-ranked pins first and fills to six without duplicates', () => {
+  assert.deepEqual(
+    getMostUsedActions(
+      {
+        sortByDomain: { count: 2 },
+        removeDuplicates: { count: 10 },
+        groupByDomain: { count: 8 },
+        ungroup: { count: 6 },
+        bringToWindow: { count: 4 },
+        findMediaPlaying: { count: 2 },
+        closeDomainAllWindows: { count: 1 },
+      },
+      6,
+      ['sortByDomain', 'removeDuplicates']
+    ),
+    [
+      'removeDuplicates',
+      'sortByDomain',
+      'groupByDomain',
+      'ungroup',
+      'bringToWindow',
+      'findMediaPlaying',
+    ]
+  );
+});
+
+test('getMostUsedActions keeps every pin when pins exceed the automatic capacity', () => {
+  assert.deepEqual(
+    getMostUsedActions(
+      { closeDomainAllWindows: { count: 7 }, sortByDomain: { count: 2 } },
+      6,
+      ['sortByDomain', 'ungroup', 'removeDuplicates', 'findMediaPlaying', 'closeDomainAllWindows', 'bringToWindow', 'groupByDomain']
+    ),
+    [
+      'closeDomainAllWindows',
+      'sortByDomain',
+      'groupByDomain',
+      'ungroup',
+      'removeDuplicates',
+      'bringToWindow',
+      'findMediaPlaying',
+    ]
+  );
+});
+
 test('getUsageSuggestion waits until the minimum total usage threshold', () => {
   assert.equal(
     getUsageSuggestion(

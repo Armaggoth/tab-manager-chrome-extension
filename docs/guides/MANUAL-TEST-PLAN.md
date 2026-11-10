@@ -39,6 +39,25 @@ Remaining browser validation includes Remove Duplicates, the move and close oper
 
 Manual Chrome validation for these actions remains part of the release checklist.
 
+## Bring All Merge Validation
+
+Bring All transfers existing groups intact and moves each source window's active tab
+or active group last. It does not deliberately discard, reload, or recreate pages.
+Avoiding incidental reloads is best effort; Chrome still controls page lifecycle.
+
+1. In a disposable profile, prepare three normal windows with more than 100 tabs total, mixing loaded tabs and tabs discarded through `chrome://discards`. Leave a loaded tab active in each source window.
+2. Include pinned tabs, loose tabs, and multiple groups. Give two separate groups the same title but different colors. Collapse some groups and record their member order. Repeat with a source's active tab inside a group, then pinned.
+3. Record sleeping tabs' discarded state and discard counts. Keep a loaded page with an unsaved draft and a media-playing tab to check live page state.
+4. From the destination window, click **Bring All to This Window**. Confirm all original tabs arrive, pinned tabs remain pinned, source windows close, and the destination's original active tab is selected when the operation completes.
+5. Confirm each group retains its title, color, collapsed state, and member order. Same-title groups must remain separate; loose tabs must remain ungrouped.
+6. Without selecting the sleeping pages, inspect `chrome://discards` again. Check for unexpected transitions to loaded state or a reload burst. Confirm the draft and media state survived. Only then select a sleeping page and confirm that it loads normally.
+7. Repeat with Ignore Pinned Tabs on and off. Bring All intentionally includes pinned tabs in both cases. Clicking again with no other windows is a no-op.
+8. Test from both the popup and side panel, including a pinned or grouped active destination tab. Switch focus to another window immediately after clicking. The destination must remain the original active tab's window, stay open, and regain focus with that original tab selected after all transfers.
+
+The automated merge tests check transfer order, sleeping-tab flags, pinned state,
+and intact group moves. They cannot establish Chrome's actual network or renderer
+behavior; the browser checks above remain required before claiming no reloads.
+
 ## Planned UI Enhancements
 
 Error and success feedback is intentionally deferred until the core UI and move features are complete.
@@ -64,7 +83,7 @@ Continue using the current Node test suite and manual Chrome validation for now.
 
 Action visibility customization is deferred; all actions should remain visible in both UIs for now.
 
-The toolbar badge is deferred because it is currently unclear whether its number should represent tabs, windows, or a selected action context.
+The toolbar badge shows the total number of tabs across all windows that match the active tab's domain (exact domain, same matching rules as the all-windows domain move/close actions, including grouped tabs). Badge color/scope customization is not yet implemented.
 
 ## Test Fixture
 
@@ -361,7 +380,25 @@ Questions:
 4. Were ignored pinned tabs preserved? **Yes/No/Not applicable**
 5. Were tabs in other windows unchanged? **Yes/No/Not tested**
 
-### 10. Bring All to This Window
+### 10. Move Active Tab to New Window
+
+Reset the fixture with multiple tabs in Window A, including one active grouped tab and one pinned tab. Enable Ignore Pinned Tabs, then click **Move Active Tab to New Window**.
+
+Expected:
+
+- Only the active tab moves to a new window, even if it is grouped.
+- Other tabs and tabs in other windows remain where they are.
+- An active pinned tab stays in Window A while Ignore Pinned Tabs is enabled.
+- The action count is 1 for an eligible active tab and omitted when the active tab is ignored.
+
+Questions:
+
+1. Did only the active tab move to a new window? **Yes/No**
+2. Did the action move an active grouped tab? **Yes/No/Not tested**
+3. Did an ignored active pinned tab remain in place? **Yes/No/Not applicable**
+4. Did the action count match whether the active tab was eligible? **Yes/No**
+
+### 11. Bring All to This Window
 
 Reset the fixture with tabs in Window A and Window B. Focus Window A and click **Bring All to This Window**.
 
@@ -380,7 +417,7 @@ Questions:
 3. Did grouped tabs move while preserving their group assignments? **Yes/No/Not tested**
 4. Did pinned tabs move, stay pinned, and keep their moved-tab order regardless of the Ignore Pinned Tabs setting? **Yes/No/Not tested**
 
-### 11. Close Domain (Current Window)
+### 12. Close Domain (Current Window)
 
 Reset the fixture. In Window A, focus a tab whose domain appears in Window A and Window B, then click **Close Domain (Current Window)**.
 
@@ -403,7 +440,7 @@ Questions:
 5. Were ignored pinned matching tabs preserved? **Yes/No/Not applicable**
 6. Did canceling preserve all tabs? **Yes/No/Not tested**
 
-### 12. Close Domain (All Windows)
+### 13. Close Domain (All Windows)
 
 Reset the fixture. In Window A, focus a tab whose domain appears in multiple windows, then click **Close Domain (All Windows)**.
 
@@ -425,7 +462,7 @@ Questions:
 5. Were ignored pinned matching tabs preserved? **Yes/No/Not applicable**
 6. Did canceling preserve all tabs? **Yes/No/Not tested**
 
-### 13. Settings and Side-Panel Smoke Test
+### 14. Settings and Side-Panel Smoke Test
 
 Open Settings and test each setting at least once.
 

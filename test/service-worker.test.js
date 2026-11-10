@@ -16,12 +16,22 @@ let moveCalls = [];
 let removeCalls = [];
 let groups = [];
 let groupCalls = [];
+let groupMoveCalls = [];
+let mergeTransferCalls = [];
 let windowCreateCalls = [];
 let windowUpdateCalls = [];
 let updateCalls = [];
 let setPopupCalls = [];
+let badgeTextCalls = [];
+let badgeColorCalls = [];
 let localStorageData = {};
 let currentWindowId = 1;
+let tabActivatedHandler;
+let tabCreatedHandler;
+let tabRemovedHandler;
+let tabUpdatedHandler;
+let tabMovedHandler;
+let windowFocusChangedHandler;
 
 globalThis.chrome = {
   tabs: {
@@ -47,12 +57,18 @@ globalThis.chrome = {
     },
     move: (tabIds, moveProperties, callback) => {
       moveCalls.push({ tabIds: [...tabIds], moveProperties });
+      mergeTransferCalls.push([...tabIds]);
       const ids = new Set(tabIds);
       const movedTabs = tabIds.map((tabId) => {
         const tab = currentTabs.find((candidate) => candidate.id === tabId);
         return moveProperties.windowId === undefined
           ? tab
-          : { ...tab, windowId: moveProperties.windowId, pinned: false };
+          : {
+            ...tab,
+            windowId: moveProperties.windowId,
+            pinned: false,
+            groupId: moveProperties.windowId === tab.windowId ? tab.groupId : -1,
+          };
       });
       const remainingTabs = currentTabs.filter((tab) => !ids.has(tab.id));
       const insertIndex = moveProperties.index === -1 ? remainingTabs.length : moveProperties.index;
@@ -62,8 +78,13 @@ globalThis.chrome = {
     },
     update: (tabId, updateProperties, callback) => {
       updateCalls.push({ tabId, updateProperties });
+      const targetWindowId = currentTabs.find((tab) => tab.id === tabId)?.windowId;
       currentTabs = currentTabs.map((tab) =>
-        tab.id === tabId ? { ...tab, ...updateProperties } : tab
+        tab.id === tabId
+          ? { ...tab, ...updateProperties }
+          : updateProperties.active && tab.windowId === targetWindowId
+            ? { ...tab, active: false }
+            : tab
       );
       const updatedTab = currentTabs.find((tab) => tab.id === tabId);
       if (typeof callback === 'function') callback(updatedTab);
@@ -76,6 +97,11 @@ globalThis.chrome = {
       if (typeof callback === 'function') callback();
       return Promise.resolve();
     },
+    onActivated: { addListener: (handler) => { tabActivatedHandler = handler; } },
+    onCreated: { addListener: (handler) => { tabCreatedHandler = handler; } },
+    onRemoved: { addListener: (handler) => { tabRemovedHandler = handler; } },
+    onUpdated: { addListener: (handler) => { tabUpdatedHandler = handler; } },
+    onMoved: { addListener: (handler) => { tabMovedHandler = handler; } },
   },
   storage: {
     sync: {
@@ -103,10 +129,22 @@ globalThis.chrome = {
       setPopupCalls.push(options);
       return Promise.resolve();
     },
+    setBadgeText: (details, callback) => {
+      badgeTextCalls.push(details.text);
+      if (typeof callback === 'function') callback();
+      return Promise.resolve();
+    },
+    setBadgeBackgroundColor: (details, callback) => {
+      badgeColorCalls.push(details.color);
+      if (typeof callback === 'function') callback();
+      return Promise.resolve();
+    },
   },
   sidePanel: { open: () => {} },
   windows: {
     WINDOW_ID_CURRENT: currentWindowId,
+    WINDOW_ID_NONE: -1,
+    onFocusChanged: { addListener: (handler) => { windowFocusChangedHandler = handler; } },
     create: (createData, callback) => {
       const windowId = Math.max(100, ...currentTabs.map((tab) => tab.windowId)) + 1;
       windowCreateCalls.push({ ...createData, windowId });
@@ -132,6 +170,17 @@ globalThis.chrome = {
   },
   tabGroups: {
     TAB_GROUP_ID_NONE: -1,
+    move: async (groupId, moveProperties) => {
+      groupMoveCalls.push({ groupId, moveProperties });
+      const members = currentTabs.filter((tab) => tab.groupId === groupId);
+      mergeTransferCalls.push(members.map((tab) => tab.id));
+      currentTabs = currentTabs.filter((tab) => tab.groupId !== groupId);
+      currentTabs.push(...members.map((tab) => ({ ...tab, windowId: moveProperties.windowId })));
+      groups = groups.map((group) => group.id === groupId
+        ? { ...group, windowId: moveProperties.windowId }
+        : group);
+      return groups.find((group) => group.id === groupId);
+    },
     query: (queryInfo, callback) => callback(groups.filter((group) => group.windowId === queryInfo.windowId)),
     update: (groupId, properties, callback) => {
       groups = groups.map((group) =>
@@ -204,6 +253,20 @@ function runMoveUngroupedCurrentWindow(tabs, activeSettings = {}) {
   });
 }
 
+function runMoveActiveTabToNewWindow(tabs, activeSettings = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  removeCalls = [];
+  windowCreateCalls = [];
+  updateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'moveActiveTabToNewWindow' }, {}, resolve);
+  });
+}
+
 function runMoveDomainCurrentWindow(tabs, activeSettings = {}, options = {}) {
   currentTabs = tabs.map((tab) => ({ ...tab }));
   settings = activeSettings;
@@ -232,7 +295,24 @@ function runMoveDomainAllWindows(tabs, activeSettings = {}) {
   });
 }
 
-function runBringAllToCurrentWindow(tabs, activeSettings = {}) {
+function runBringAllToCurrentWindow(tabs, activeSettings = {}, request = {}) {
+  currentTabs = tabs.map((tab) => ({ ...tab }));
+  settings = activeSettings;
+  moveCalls = [];
+  groupCalls = [];
+  groupMoveCalls = [];
+  mergeTransferCalls = [];
+  removeCalls = [];
+  windowCreateCalls = [];
+  windowUpdateCalls = [];
+  updateCalls = [];
+  currentWindowId = 1;
+  return new Promise((resolve) => {
+    messageHandler({ action: 'bringToWindow', ...request }, {}, resolve);
+  });
+}
+
+function runBringDomainToCurrentWindow(tabs, activeSettings = {}, options = {}) {
   currentTabs = tabs.map((tab) => ({ ...tab }));
   settings = activeSettings;
   moveCalls = [];
@@ -242,7 +322,7 @@ function runBringAllToCurrentWindow(tabs, activeSettings = {}) {
   updateCalls = [];
   currentWindowId = 1;
   return new Promise((resolve) => {
-    messageHandler({ action: 'bringToWindow' }, {}, resolve);
+    messageHandler({ action: 'bringDomainToCurrentWindow', ...options }, {}, resolve);
   });
 }
 
@@ -349,6 +429,30 @@ test('does not create a group when a domain bucket contains only one eligible ta
   assert.equal(groups.find((group) => group.title === 'shared.example').collapsed, true);
 });
 
+test('groups Atlassian login and content tabs by application', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://id.atlassian.com/login?application=jira'),
+    createTab(2, 'https://client.jira.com/browse/ENG-123'),
+    createTab(3, 'https://id.atlassian.com/login?application=confluence'),
+    createTab(4, 'https://client.atlassian.net/wiki/spaces/ENG'),
+  ];
+  groups = [];
+  groupCalls = [];
+
+  await new Promise((resolve) => {
+    messageHandler({ action: 'groupByDomain', ignoreSubdomain: false }, {}, resolve);
+  });
+
+  assert.deepEqual(
+    groupCalls.map((call) => call.tabIds.sort((first, second) => first - second)),
+    [[1, 2], [3, 4]]
+  );
+  assert.deepEqual(
+    groups.map((group) => group.title),
+    ['Jira', 'Confluence']
+  );
+});
+
 test('moves ungrouped tabs to the right after grouping', { concurrency: false }, async () => {
   currentTabs = [
     createTab(1, 'https://alpha.example/'),
@@ -436,30 +540,66 @@ test('detects Atlassian product by URL path on the same host', { concurrency: fa
     'jira'
   );
   assert.equal(detectAtlassianProduct('https://client.jira.com/secure/Dashboard.jspa'), 'jira');
+  assert.equal(
+    detectAtlassianProduct(
+      'https://id.atlassian.com/login?application=jira&continue=https%3A%2F%2Fvailresorts.jira.com%2Fbrowse%2FGXTD-7798'
+    ),
+    'jira'
+  );
+  assert.equal(
+    detectAtlassianProduct('https://id.atlassian.com/login?application=confluence'),
+    'confluence'
+  );
+  assert.equal(
+    getGroupingKey('https://id.atlassian.com/login?application=bitbucket'),
+    'atlassian:bitbucket'
+  );
+  assert.equal(
+    getGroupingLabel('https://id.atlassian.com/login?application=confluence'),
+    'Confluence'
+  );
+  assert.equal(detectAtlassianProduct('https://example.com/login?application=jira'), null);
   assert.equal(detectAtlassianProduct('https://example.com/jira/software/c/projects/DII/boards/1462'), null);
   assert.equal(detectAtlassianProduct('https://example.com/'), null);
 });
 
-test('keeps Jira and Confluence separate when hosted on the same domain', { concurrency: false }, () => {
+test('groups Atlassian tabs by product across hosts and page types', { concurrency: false }, () => {
+  const jiraLogin = 'https://id.atlassian.com/login?application=jira';
+  const jiraTicket = 'https://client.jira.com/browse/ENG-123';
+  const confluenceLogin = 'https://id.atlassian.com/login?application=confluence';
+  const confluenceArticle = 'https://client.atlassian.net/wiki/spaces/ENG';
+
   assert.equal(
-    getGroupingKey('https://client.jira.com/wiki/spaces/ENG'),
-    'atlassian:confluence:client.jira.com'
+    getGroupingKey(jiraLogin),
+    getGroupingKey(jiraTicket)
   );
   assert.equal(
-    getGroupingKey('https://client.jira.com/browse/ENG-123'),
-    'atlassian:jira:client.jira.com'
+    getGroupingKey(confluenceLogin),
+    getGroupingKey(confluenceArticle)
   );
+  assert.notEqual(getGroupingKey(jiraLogin), getGroupingKey(confluenceLogin));
+  assert.equal(getGroupingLabel(jiraLogin), 'Jira');
+  assert.equal(getGroupingLabel(jiraTicket), 'Jira');
+  assert.equal(getGroupingLabel(confluenceLogin), 'Confluence');
+  assert.equal(getGroupingLabel(confluenceArticle), 'Confluence');
+});
+
+test('keeps Atlassian products separate when ignoring subdomains', { concurrency: false }, () => {
   assert.equal(
     getGroupingKey('https://client.jira.com/wiki/spaces/ENG', true),
-    'atlassian:confluence:jira.com'
+    'atlassian:confluence'
   );
   assert.equal(
-    getGroupingLabel('https://client.jira.com/wiki/spaces/ENG'),
-    'Confluence: client.jira.com'
+    getGroupingKey('https://client.jira.com/browse/ENG-123', true),
+    'atlassian:jira'
   );
   assert.equal(
-    getGroupingLabel('https://client.jira.com/browse/ENG-123'),
-    'Jira: client.jira.com'
+    getGroupingLabel('https://client.jira.com/wiki/spaces/ENG', true),
+    'Confluence'
+  );
+  assert.equal(
+    getGroupingLabel('https://client.jira.com/browse/ENG-123', true),
+    'Jira'
   );
 });
 
@@ -607,6 +747,17 @@ test('removeDuplicates removes exact duplicate URLs and keeps first instance', {
   assert.deepEqual(removeCalls, [[3]]);
 });
 
+test('removeDuplicates keeps the active tab when it is a duplicate', { concurrency: false }, async () => {
+  await runRemoveDuplicates([
+    createTab(1, 'https://example.com/page1'),
+    createTab(2, 'https://example.com/page1'),
+    createTab(3, 'https://example.com/page1', { active: true }),
+  ]);
+
+  assert.deepEqual(tabIds(), [3]);
+  assert.deepEqual(removeCalls, [[1, 2]]);
+});
+
 test('removeDuplicates detects duplicate Google Docs by document ID when setting enabled', { concurrency: false }, async () => {
   const doc1 = 'https://docs.google.com/document/d/12345/edit?tab=t.0';
   const doc1AnotherTab = 'https://docs.google.com/document/d/12345/edit?tab=t.1';
@@ -682,6 +833,34 @@ test('moves eligible ungrouped current-window tabs to a new window', { concurren
     [2, 4]
   );
   assert.equal(currentTabs.find((tab) => tab.id === 5).windowId, 2);
+});
+
+test('moves only the active current-window tab to a new window', { concurrency: false }, async () => {
+  await runMoveActiveTabToNewWindow([
+    createTab(1, 'https://first.example/'),
+    createTab(2, 'https://active.example/', { active: true, groupId: 7 }),
+    createTab(3, 'https://third.example/'),
+    createTab(4, 'https://other-window.example/', { windowId: 2, active: true }),
+  ]);
+
+  const movedWindowId = windowCreateCalls[0].windowId;
+  assert.deepEqual(windowCreateCalls.map(({ tabId }) => tabId), [2]);
+  assert.deepEqual(moveCalls, []);
+  assert.equal(currentTabs.find((tab) => tab.id === 2).windowId, movedWindowId);
+  assert.deepEqual(
+    currentTabs.filter((tab) => tab.windowId === 1).map((tab) => tab.id),
+    [1, 3]
+  );
+  assert.equal(currentTabs.find((tab) => tab.id === 4).windowId, 2);
+});
+
+test('does not move an active pinned tab when pinned tabs are ignored', { concurrency: false }, async () => {
+  await runMoveActiveTabToNewWindow([
+    createTab(1, 'https://active.example/', { active: true, pinned: true }),
+  ], { ignorePinnedTabs: true });
+
+  assert.deepEqual(windowCreateCalls, []);
+  assert.equal(currentTabs[0].windowId, 1);
 });
 
 test('moves current-window domain tabs by active tab domain without a prompt value', { concurrency: false }, async () => {
@@ -778,7 +957,10 @@ test('bring all to this window moves pinned and grouped tabs', { concurrency: fa
 
   assert.deepEqual(moveCalls, [
     { tabIds: [3], moveProperties: { windowId: 1, index: -1 } },
-    { tabIds: [2, 4], moveProperties: { windowId: 1, index: -1 } },
+    { tabIds: [2], moveProperties: { windowId: 1, index: -1 } },
+  ]);
+  assert.deepEqual(groupMoveCalls, [
+    { groupId: 8, moveProperties: { windowId: 1, index: -1 } },
   ]);
   assert.deepEqual(updateCalls, [
     { tabId: 3, updateProperties: { pinned: true } },
@@ -789,6 +971,156 @@ test('bring all to this window moves pinned and grouped tabs', { concurrency: fa
   );
   assert.equal(currentTabs.find((tab) => tab.id === 3).pinned, true);
   assert.equal(currentTabs.find((tab) => tab.id === 4).groupId, 8);
+});
+
+test('bring all to this window leaves an active pinned source tab until last with 120 sleeping tabs', { concurrency: false }, async () => {
+  const sleepingTabs = Array.from({ length: 120 }, (_, index) =>
+    createTab(index + 3, `https://sleeping.example/${index}`, {
+      windowId: 2,
+      active: false,
+      discarded: true,
+    })
+  );
+
+  await runBringAllToCurrentWindow([
+    createTab(1, 'https://destination.example/', { active: true }),
+    createTab(2, 'https://source.example/', { windowId: 2, pinned: true, active: true }),
+    ...sleepingTabs,
+  ]);
+
+  assert.deepEqual(mergeTransferCalls, [...sleepingTabs.map((tab) => [tab.id]), [2]]);
+  assert.equal(currentTabs.filter((tab) => tab.discarded).length, 120);
+  assert.ok(currentTabs.every((tab) => tab.windowId === 1));
+  assert.deepEqual(updateCalls, [
+    { tabId: 2, updateProperties: { pinned: true } },
+    { tabId: 1, updateProperties: { active: true } },
+    { tabId: 1, updateProperties: { active: true } },
+  ]);
+  assert.deepEqual(removeCalls, []);
+  assert.deepEqual(windowCreateCalls, []);
+});
+
+test('bring all to this window moves the active group last and preserves separate same-title groups', { concurrency: false }, async () => {
+  groups = [
+    { id: 7, windowId: 1, title: 'Work', color: 'blue', collapsed: true },
+    { id: 8, windowId: 2, title: 'Work', color: 'green', collapsed: false },
+    { id: 9, windowId: 2, title: 'Work', color: 'red', collapsed: true },
+    { id: 10, windowId: 3, title: 'Other', color: 'yellow', collapsed: false },
+  ];
+  const expectedGroups = groups.map((group) => ({ ...group, windowId: 1 }));
+
+  await runBringAllToCurrentWindow([
+    createTab(1, 'https://destination.example/', { active: true }),
+    createTab(2, 'https://destination.example/grouped', { groupId: 7 }),
+    createTab(3, 'https://source.example/active', { windowId: 2, groupId: 8, active: true }),
+    createTab(4, 'https://source.example/member', { windowId: 2, groupId: 8, discarded: true }),
+    createTab(5, 'https://source.example/other', { windowId: 2, groupId: 9, discarded: true }),
+    createTab(6, 'https://source.example/loose', { windowId: 2, discarded: true }),
+    createTab(7, 'https://third.example/', { windowId: 3, groupId: 10, active: true }),
+  ]);
+
+  assert.deepEqual(mergeTransferCalls, [[5], [6], [3, 4], [7]]);
+  assert.deepEqual(groupMoveCalls.map((call) => call.groupId), [9, 8, 10]);
+  assert.deepEqual(groups, expectedGroups);
+  assert.deepEqual(currentTabs.filter((tab) => tab.groupId === 8).map((tab) => tab.id), [3, 4]);
+  assert.equal(currentTabs.filter((tab) => tab.discarded).length, 3);
+  assert.deepEqual(groupCalls, []);
+  assert.deepEqual(updateCalls, [
+    { tabId: 1, updateProperties: { active: true } },
+    { tabId: 1, updateProperties: { active: true } },
+    { tabId: 1, updateProperties: { active: true } },
+  ]);
+});
+
+test('bring all to this window does nothing when no other windows have tabs', { concurrency: false }, async () => {
+  await runBringAllToCurrentWindow([
+    createTab(1, 'https://destination.example/', { active: true }),
+  ]);
+
+  assert.deepEqual(mergeTransferCalls, []);
+  assert.deepEqual(updateCalls, []);
+});
+
+test('bring all uses the originating active tab window even when the worker current window differs', { concurrency: false }, async () => {
+  groups = [{ id: 19, windowId: 3, title: 'Source', color: 'blue' }];
+  const response = await runBringAllToCurrentWindow(
+    [
+      createTab(1, 'https://other-window.example/', { active: true }),
+      createTab(2, 'https://destination.example/', { windowId: 2, active: true, pinned: true }),
+      createTab(3, 'https://destination.example/loose', { windowId: 2 }),
+      createTab(4, 'https://source.example/', { windowId: 3, active: true, groupId: 19 }),
+      createTab(5, 'https://source.example/pinned', { windowId: 3, pinned: true }),
+    ],
+    { ignorePinnedTabs: true },
+    { windowId: 2, activeTabId: 2 }
+  );
+
+  assert.equal(response.success, true);
+  assert.ok(currentTabs.every((tab) => tab.windowId === 2));
+  assert.deepEqual(currentTabs.filter((tab) => tab.active).map((tab) => tab.id), [2]);
+  assert.ok(moveCalls.every((call) => call.moveProperties.windowId === 2));
+  assert.ok(moveCalls.every((call) => !call.tabIds.includes(2) && !call.tabIds.includes(3)));
+  assert.deepEqual(groupMoveCalls, [{ groupId: 19, moveProperties: { windowId: 2, index: -1 } }]);
+  assert.equal(currentTabs.find((tab) => tab.id === 2).pinned, true);
+  assert.equal(currentTabs.find((tab) => tab.id === 5).pinned, true);
+  assert.deepEqual(windowUpdateCalls, [{ windowId: 2, updateInfo: { focused: true } }]);
+  assert.deepEqual(windowCreateCalls, []);
+  assert.deepEqual(removeCalls, []);
+});
+
+test('bring all refuses a stale destination instead of merging into a different window', { concurrency: false }, async (t) => {
+  const loggedErrors = [];
+  t.mock.method(console, 'error', (...args) => loggedErrors.push(args));
+  const response = await runBringAllToCurrentWindow(
+    [
+      createTab(1, 'https://current.example/', { active: true }),
+      createTab(2, 'https://moved-destination.example/', { windowId: 3, active: true }),
+    ],
+    {},
+    { windowId: 2, activeTabId: 2 }
+  );
+
+  assert.equal(response.success, false);
+  assert.match(response.error, /original destination tab/);
+  assert.equal(loggedErrors.length, 1);
+  assert.deepEqual(mergeTransferCalls, []);
+  assert.deepEqual(updateCalls, []);
+  assert.deepEqual(windowUpdateCalls, []);
+  assert.deepEqual(currentTabs.map((tab) => tab.windowId), [1, 3]);
+});
+
+test('brings matching domain tabs from other windows to the current window', { concurrency: false }, async () => {
+  await runBringDomainToCurrentWindow([
+    createTab(1, 'https://app.example.com/current', { active: true }),
+    createTab(2, 'https://app.example.com/other', { windowId: 2 }),
+    createTab(3, 'https://www.example.com/other', { windowId: 2 }),
+    createTab(4, 'https://app.example.com/pinned', { windowId: 3, pinned: true }),
+    createTab(5, 'https://app.example.com/grouped', { windowId: 3, groupId: 8 }),
+  ], { ignorePinnedTabs: false });
+
+  assert.deepEqual(moveCalls, [
+    { tabIds: [4], moveProperties: { windowId: 1, index: -1 } },
+    { tabIds: [2, 5], moveProperties: { windowId: 1, index: -1 } },
+  ]);
+  assert.deepEqual(updateCalls, [{ tabId: 4, updateProperties: { pinned: true } }]);
+  assert.equal(currentTabs.find((tab) => tab.id === 3).windowId, 2);
+});
+
+test('brings matching base-domain tabs from other windows to the current window', { concurrency: false }, async () => {
+  await runBringDomainToCurrentWindow(
+    [
+      createTab(1, 'https://www.example.com/current', { active: true }),
+      createTab(2, 'https://app.example.com/other', { windowId: 2 }),
+      createTab(3, 'https://other.example/other', { windowId: 2 }),
+    ],
+    {},
+    { action: 'bringDomainToCurrentWindowNoSubdomain' }
+  );
+
+  assert.deepEqual(moveCalls, [
+    { tabIds: [2], moveProperties: { windowId: 1, index: -1 } },
+  ]);
+  assert.equal(currentTabs.find((tab) => tab.id === 3).windowId, 2);
 });
 
 test('closes current-window domain tabs including grouped matches', { concurrency: false }, async () => {
@@ -834,6 +1166,168 @@ test('closes all-window Google editor type tabs including grouped matches', { co
 test('applies the popup-free side panel access mode by default on load', { concurrency: false }, async () => {
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.deepEqual(setPopupCalls.at(-1), { popup: '' });
+});
+
+test('sets a badge background color on load', () => {
+  assert.equal(badgeColorCalls.length, 1);
+  assert.match(badgeColorCalls[0], /^#/);
+});
+
+test('badge shows total matching tabs across all windows for the active domain', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://example.com/', { active: true }),
+    createTab(2, 'https://example.com/other'),
+    createTab(3, 'https://example.com/other-window', { windowId: 2 }),
+    createTab(4, 'https://other.example/', { windowId: 2 }),
+    createTab(5, 'https://example.com/pinned', { windowId: 3, pinned: true }),
+  ];
+  settings = { ignorePinnedTabs: true };
+  currentWindowId = 1;
+  badgeTextCalls = [];
+
+  await new Promise((resolve) => {
+    tabActivatedHandler({});
+    setTimeout(resolve, 0);
+  });
+
+  assert.equal(badgeTextCalls.at(-1), '3');
+  const { counts } = await new Promise((resolve) => {
+    messageHandler({ action: 'getAffectedTabCounts' }, {}, resolve);
+  });
+  assert.equal(badgeTextCalls.at(-1), String(counts.closeDomainAllWindows));
+  assert.equal(counts.closeDomainAllWindows, counts.moveDomainAllWindows);
+});
+
+test('active-tab move count reflects the active tab and pinned-tab setting', { concurrency: false }, async () => {
+  currentTabs = [createTab(1, 'https://active.example/', { active: true })];
+  settings = { ignorePinnedTabs: true };
+  currentWindowId = 1;
+
+  const { counts } = await new Promise((resolve) => {
+    messageHandler({ action: 'getAffectedTabCounts' }, {}, resolve);
+  });
+  assert.equal(counts.moveActiveTabToNewWindow, 1);
+
+  currentTabs[0].pinned = true;
+  const pinnedResult = await new Promise((resolve) => {
+    messageHandler({ action: 'getAffectedTabCounts' }, {}, resolve);
+  });
+  assert.equal(pinnedResult.counts.moveActiveTabToNewWindow, 0);
+});
+
+test('badge refreshes when switching windows without activating another tab', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://example.com/', { active: true }),
+    createTab(2, 'https://example.com/other'),
+    createTab(3, 'https://other.example/', { windowId: 2, active: true }),
+  ];
+  settings = {};
+  currentWindowId = 1;
+  badgeTextCalls = [];
+
+  await tabActivatedHandler({});
+  assert.equal(badgeTextCalls.at(-1), '2');
+
+  assert.equal(typeof windowFocusChangedHandler, 'function');
+  currentWindowId = 2;
+  await windowFocusChangedHandler(2);
+  assert.equal(badgeTextCalls.at(-1), '1');
+
+  currentTabs = [];
+  await windowFocusChangedHandler(chrome.windows.WINDOW_ID_NONE);
+  assert.equal(badgeTextCalls.at(-1), '1');
+});
+
+test('badge counts every matching tab already in a tab group, not just its window', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://example.com/', { active: true }),
+    createTab(2, 'https://example.com/grouped-a', { windowId: 2, groupId: 5 }),
+    createTab(3, 'https://example.com/grouped-b', { windowId: 2, groupId: 5 }),
+  ];
+  settings = {};
+  currentWindowId = 1;
+  badgeTextCalls = [];
+
+  await new Promise((resolve) => {
+    tabActivatedHandler({});
+    setTimeout(resolve, 0);
+  });
+
+  assert.equal(badgeTextCalls.at(-1), '3');
+});
+
+test('clears and skips computing the badge when badgeEnabled is false', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://example.com/', { active: true }),
+    createTab(2, 'https://example.com/other-window', { windowId: 2 }),
+  ];
+  settings = { badgeEnabled: false };
+  currentWindowId = 1;
+  badgeTextCalls = [];
+
+  await new Promise((resolve) => {
+    tabActivatedHandler({});
+    setTimeout(resolve, 0);
+  });
+
+  assert.equal(badgeTextCalls.at(-1), '');
+});
+
+test('badge caps at 9+ and clears when nothing matches the active tab', { concurrency: false }, async () => {
+  currentTabs = [
+    createTab(1, 'https://example.com/', { active: true }),
+    ...Array.from({ length: 10 }, (_, index) =>
+      createTab(100 + index, 'https://example.com/other', { windowId: 100 + index })
+    ),
+  ];
+  settings = {};
+  currentWindowId = 1;
+  badgeTextCalls = [];
+
+  await new Promise((resolve) => {
+    tabActivatedHandler({});
+    setTimeout(resolve, 0);
+  });
+
+  assert.equal(badgeTextCalls.at(-1), '9+');
+
+  currentTabs = [createTab(1, 'https://example.com/', { pinned: true, active: true })];
+  settings = { ignorePinnedTabs: true };
+  badgeTextCalls = [];
+
+  await new Promise((resolve) => {
+    tabActivatedHandler({});
+    setTimeout(resolve, 0);
+  });
+
+  assert.equal(badgeTextCalls.at(-1), '');
+});
+
+test('badge recalculates on tab create/remove events for the active domain', { concurrency: false }, async () => {
+  currentTabs = [createTab(1, 'https://example.com/', { active: true })];
+  settings = {};
+  currentWindowId = 1;
+  badgeTextCalls = [];
+
+  await new Promise((resolve) => {
+    tabActivatedHandler({});
+    setTimeout(resolve, 0);
+  });
+  assert.equal(badgeTextCalls.at(-1), '1');
+
+  currentTabs.push(createTab(2, 'https://example.com/', { windowId: 2 }));
+  await new Promise((resolve) => {
+    tabCreatedHandler({});
+    setTimeout(resolve, 0);
+  });
+  assert.equal(badgeTextCalls.at(-1), '2');
+
+  currentTabs = currentTabs.filter((tab) => tab.id !== 2);
+  await new Promise((resolve) => {
+    tabRemovedHandler(2, {});
+    setTimeout(resolve, 0);
+  });
+  assert.equal(badgeTextCalls.at(-1), '1');
 });
 
 test('names hostname-less protocols instead of grouping them as unknown', () => {

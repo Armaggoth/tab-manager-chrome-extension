@@ -86,6 +86,11 @@ export function detectAtlassianProduct(url) {
     const hostname = urlObj.hostname.toLowerCase();
     const isAtlassianHost = hostname.endsWith('.atlassian.net') || hostname.endsWith('.jira.com');
 
+    const application = urlObj.searchParams.get('application')?.toLowerCase();
+    if (hostname === 'id.atlassian.com' && /^[a-z][a-z0-9-]*$/.test(application || '')) {
+      return application;
+    }
+
     if (segments[0] === 'wiki') {
       return 'confluence';
     }
@@ -187,8 +192,7 @@ export function getGroupingKey(url, ignoreSubdomain = false) {
 
     const atlassianProduct = detectAtlassianProduct(url);
     if (atlassianProduct) {
-      const domain = extractDomain(url, ignoreSubdomain) || getKnownProtocolInfo(url)?.key || 'unknown';
-      return `atlassian:${atlassianProduct}:${domain}`;
+      return `atlassian:${atlassianProduct}`;
     }
 
     return extractDomain(url, ignoreSubdomain) || getKnownProtocolInfo(url)?.key || 'unknown';
@@ -216,8 +220,8 @@ export function getGroupingLabel(url, ignoreSubdomain = false) {
 
   const atlassianProduct = detectAtlassianProduct(url);
   if (atlassianProduct) {
-    const domain = extractDomain(url, ignoreSubdomain) || 'unknown';
-    return `${atlassianProduct === 'jira' ? 'Jira' : 'Confluence'}: ${domain}`;
+    const productLabel = atlassianProduct[0].toUpperCase() + atlassianProduct.slice(1);
+    return productLabel;
   }
 
   return extractDomain(url, ignoreSubdomain) || getKnownProtocolInfo(url)?.label || 'unknown';
@@ -237,6 +241,9 @@ export const ACTION_LABELS = {
   moveDomainCurrentWindowNoSubdomain: 'Move Base Domain to New Window (Current Window)',
   moveDomainAllWindowsNoSubdomain: 'Move Base Domain to New Window (All Windows)',
   moveUngroupedCurrentWindow: 'Move Ungrouped to New Window',
+  moveActiveTabToNewWindow: 'Move Active Tab to New Window',
+  bringDomainToCurrentWindow: 'Bring Domain to This Window',
+  bringDomainToCurrentWindowNoSubdomain: 'Bring Base Domain to This Window',
   bringToWindow: 'Bring All to This Window',
   closeDomainCurrentWindow: 'Close Domain (Current Window)',
   closeDomainAllWindows: 'Close Domain (All Windows)',
@@ -250,6 +257,7 @@ export const ACTION_GROUPS = [
       {
         key: 'sortByDomain',
         id: 'sort-by-domain',
+        icon: 'assets/icons/48/sort-by-domain.png',
         ariaLabel: 'Sort tabs by domain',
         title: 'Sort tabs alphabetically by domain',
         buttonClass: 'btn-secondary',
@@ -257,6 +265,7 @@ export const ACTION_GROUPS = [
       {
         key: 'groupByDomain',
         id: 'group-by-domain',
+        icon: 'assets/icons/48/group-by-domain.png',
         ariaLabel: 'Group tabs by domain',
         title: 'Group tabs by their domain',
         buttonClass: 'btn-secondary',
@@ -264,6 +273,7 @@ export const ACTION_GROUPS = [
       {
         key: 'groupByDomainNoSubdomain',
         id: 'group-by-domain-ignore-subdomain',
+        icon: 'assets/icons/48/group-by-domain-ignore-subdomain.png',
         ariaLabel: 'Group tabs by domain ignoring subdomains',
         title: 'Group tabs by domain (e.g., example.com)',
         buttonClass: 'btn-secondary',
@@ -271,6 +281,7 @@ export const ACTION_GROUPS = [
       {
         key: 'groupGoogleDocsByType',
         id: 'group-google-docs-by-type',
+        icon: 'assets/icons/48/group-google-docs-by-type.png',
         ariaLabel: 'Group Google Docs tabs by document type',
         title: 'Group Google Docs, Sheets, Slides, and Forms tabs by type',
         buttonClass: 'btn-secondary',
@@ -278,6 +289,7 @@ export const ACTION_GROUPS = [
       {
         key: 'ungroup',
         id: 'ungroup',
+        icon: 'assets/icons/48/ungroup.png',
         ariaLabel: 'Ungroup tabs',
         title: 'Ungroup all grouped tabs',
         buttonClass: 'btn-secondary',
@@ -290,6 +302,7 @@ export const ACTION_GROUPS = [
       {
         key: 'removeDuplicates',
         id: 'remove-duplicates',
+        icon: 'assets/icons/48/remove-duplicates.png',
         ariaLabel: 'Remove duplicate tabs',
         title: 'Close duplicate tabs keeping one per URL',
         buttonClass: 'btn-secondary',
@@ -302,6 +315,7 @@ export const ACTION_GROUPS = [
       {
         key: 'moveDomainCurrentWindow',
         id: 'move-domain-current-window',
+        icon: 'assets/icons/48/move-domain-current-window.png',
         ariaLabel: 'Move current-window tabs from this domain to a new window',
         title: 'Move every tab from the active tab\'s domain in this window to a new window',
         buttonClass: 'btn-secondary',
@@ -309,6 +323,7 @@ export const ACTION_GROUPS = [
       {
         key: 'moveDomainAllWindows',
         id: 'move-domain-all-windows',
+        icon: 'assets/icons/48/move-domain-all-windows.png',
         ariaLabel: 'Move tabs from this domain in all windows to a new window',
         title: 'Move every tab from the active tab\'s domain in all windows to a new window',
         buttonClass: 'btn-secondary',
@@ -316,6 +331,7 @@ export const ACTION_GROUPS = [
       {
         key: 'moveDomainCurrentWindowNoSubdomain',
         id: 'move-domain-current-window-no-subdomain',
+        icon: 'assets/icons/48/move-domain-current-window-no-subdomain.png',
         ariaLabel: 'Move current-window tabs from this base domain to a new window',
         title: 'Move every tab from the active tab\'s base domain in this window to a new window',
         buttonClass: 'btn-secondary',
@@ -323,6 +339,7 @@ export const ACTION_GROUPS = [
       {
         key: 'moveDomainAllWindowsNoSubdomain',
         id: 'move-domain-all-windows-no-subdomain',
+        icon: 'assets/icons/48/move-domain-all-windows-no-subdomain.png',
         ariaLabel: 'Move tabs from this base domain in all windows to a new window',
         title: 'Move every tab from the active tab\'s base domain in all windows to a new window',
         buttonClass: 'btn-secondary',
@@ -330,13 +347,39 @@ export const ACTION_GROUPS = [
       {
         key: 'moveUngroupedCurrentWindow',
         id: 'move-ungrouped-current-window',
+        icon: 'assets/icons/48/move-ungrouped-current-window.png',
         ariaLabel: 'Move ungrouped current-window tabs to a new window',
         title: 'Move every ungrouped tab in this window to a new window',
         buttonClass: 'btn-secondary',
       },
       {
+        key: 'moveActiveTabToNewWindow',
+        id: 'move-active-tab-to-new-window',
+        icon: 'assets/icons/48/move-ungrouped-current-window.png',
+        ariaLabel: 'Move the active tab to a new window',
+        title: 'Move only the active tab in this window to a new window',
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'bringDomainToCurrentWindow',
+        id: 'bring-domain-to-current-window',
+        icon: 'assets/icons/48/bring-domain-to-current-window.png',
+        ariaLabel: 'Bring tabs from this domain into this window',
+        title: "Bring tabs from the active tab's domain in other windows into this window",
+        buttonClass: 'btn-secondary',
+      },
+      {
+        key: 'bringDomainToCurrentWindowNoSubdomain',
+        id: 'bring-domain-to-current-window-no-subdomain',
+        icon: 'assets/icons/48/bring-domain-to-current-window-no-subdomain.png',
+        ariaLabel: 'Bring tabs from this base domain into this window',
+        title: "Bring tabs from the active tab's base domain in other windows into this window",
+        buttonClass: 'btn-secondary',
+      },
+      {
         key: 'bringToWindow',
         id: 'bring-to-window',
+        icon: 'assets/icons/48/bring-to-window.png',
         ariaLabel: 'Move tabs from all other windows to this window',
         title: 'Move every tab from other windows into this window',
         buttonClass: 'btn-secondary',
@@ -349,6 +392,7 @@ export const ACTION_GROUPS = [
       {
         key: 'findMediaPlaying',
         id: 'find-media-playing',
+        icon: 'assets/icons/48/find-media-playing.png',
         ariaLabel: 'Find media playing',
         title: 'Focus the tab currently playing audio or video',
         buttonClass: 'btn-secondary',
@@ -361,6 +405,7 @@ export const ACTION_GROUPS = [
       {
         key: 'closeDomainCurrentWindow',
         id: 'close-domain-current-window',
+        icon: 'assets/icons/48/close-domain-current-window.png',
         ariaLabel: 'Close domain tabs from current window',
         title: 'Close all tabs with selected domain in current window',
         buttonClass: 'btn-danger',
@@ -368,6 +413,7 @@ export const ACTION_GROUPS = [
       {
         key: 'closeDomainAllWindows',
         id: 'close-domain-all-windows',
+        icon: 'assets/icons/48/close-domain-all-windows.png',
         ariaLabel: 'Close domain tabs from all windows',
         title: 'Close all tabs with selected domain from all windows',
         buttonClass: 'btn-danger',

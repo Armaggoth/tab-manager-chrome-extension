@@ -1,13 +1,17 @@
 :root {
-  --color-bg: #ffffff;
-  --color-text: #202124;
-  --color-text-secondary: #5f6368;
-  --color-border: #dadce0;
-  --color-hover: #f8f9fa;
-  --color-primary: #1f71b8;
-  --color-primary-hover: #1557a0;
-  --color-success: #1e8e3e;
-  --color-focus: #2d579c;
+  color-scheme: light;
+  --color-bg: #f3f8fa;
+  --color-surface: #ffffff;
+  --color-surface-raised: #e8f2f6;
+  --color-text: #183153;
+  --color-text-secondary: #465d70;
+  --color-border: #bfd0d8;
+  --color-hover: #eaf4f7;
+  --color-primary: #176b9b;
+  --color-primary-hover: #12577f;
+  --color-primary-ink: #ffffff;
+  --color-success: #246b3b;
+  --color-focus: #a54d15;
 
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -20,20 +24,26 @@
   --font-size-lg: 16px;
   --font-size-xl: 18px;
 
-  --border-radius: 4px;
-  --transition: all 0.2s ease;
+  --border-radius: 8px;
+  --transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease,
+    transform 140ms ease, box-shadow 140ms ease;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #202124;
-    --color-text: #e8eaed;
-    --color-text-secondary: #9aa0a6;
-    --color-border: #5f6368;
-    --color-hover: #292a2d;
-    --color-primary: #8ab4f8;
-    --color-primary-hover: #aecbfa;
-    --color-success: #81c995;
+    color-scheme: dark;
+    --color-bg: #1b302f;
+    --color-surface: #243c3a;
+    --color-surface-raised: #304a45;
+    --color-text: #fff8e8;
+    --color-text-secondary: #d0ded5;
+    --color-border: #627971;
+    --color-hover: #314a45;
+    --color-primary: #f2c75c;
+    --color-primary-hover: #ffda7c;
+    --color-primary-ink: #24363c;
+    --color-success: #9fe0ab;
+    --color-focus: #ffdb77;
   }
 }
 
@@ -81,7 +91,7 @@ main {
 section {
   margin-bottom: var(--spacing-xl);
   padding: var(--spacing-lg);
-  background-color: var(--color-hover);
+  background-color: var(--color-surface);
   border-radius: var(--border-radius);
   border: 1px solid var(--color-border);
 }
@@ -119,7 +129,19 @@ h2 {
   accent-color: var(--color-primary);
 }
 
+.checkbox-label input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--color-primary);
+}
+
 .checkbox-label input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.checkbox-label input[type='radio']:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
@@ -138,7 +160,7 @@ select {
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
-  background-color: var(--color-bg);
+  background-color: var(--color-surface);
   color: var(--color-text);
   font-size: var(--font-size-base);
   cursor: pointer;
@@ -159,6 +181,30 @@ select:focus-visible {
   margin: var(--spacing-sm) 0 0 0;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+}
+
+.mode-preview-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.setting-group[role='radiogroup'] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.setting-group[role='radiogroup'] .checkbox-label {
+  align-items: center;
+  min-height: 44px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-surface);
+}
+
+.setting-group[role='radiogroup'] .setting-description {
+  grid-column: 1 / -1;
 }
 
 .status-message {
@@ -197,7 +243,7 @@ footer {
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
-  background-color: var(--color-hover);
+  background-color: var(--color-surface);
   color: var(--color-text);
   font-size: var(--font-size-base);
   cursor: pointer;
@@ -219,7 +265,7 @@ footer {
 }
 
 .btn-secondary {
-  background-color: var(--color-hover);
+  background-color: var(--color-surface);
   border-color: var(--color-border);
 }
 
@@ -282,5 +328,14 @@ footer {
   .btn,
   select {
     border-width: 2px;
+  }
+}
+
+@media (forced-colors: active) {
+  section,
+  .setting-group[role='radiogroup'] .checkbox-label,
+  .btn,
+  select {
+    border: 1px solid ButtonText;
   }
 }

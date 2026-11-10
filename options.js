@@ -4,7 +4,9 @@ import { USAGE_SUGGESTION_DEFAULTS } from './usage.js';
 
 const ignorePinnedTabsCheckbox = document.getElementById('ignore-pinned-tabs');
 const detectDuplicateDocsCheckbox = document.getElementById('detect-duplicate-docs');
+const badgeEnabledCheckbox = document.getElementById('badge-enabled');
 const accessModeRadios = document.querySelectorAll('input[name="access-mode"]');
+const operationsUiModeRadios = document.querySelectorAll('input[name="operations-ui-mode"]');
 const languageSelect = document.getElementById('language-select');
 const resetBtn = document.getElementById('reset-btn');
 const statusMessage = document.getElementById('status');
@@ -17,17 +19,30 @@ const usageSortEnabledCheckbox = document.getElementById('usage-sort-enabled');
 const DEFAULTS = {
   ignorePinnedTabs: true,
   detectDuplicateGoogleDocs: true,
+  badgeEnabled: true,
   accessMode: 'sidePanel',
+  operationsUiMode: 'text',
   language: 'en',
 };
+
+function localizeOperationsMode() {
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    const message = chrome.i18n?.getMessage(element.dataset.i18n);
+    if (message) element.textContent = message;
+  });
+}
 
 // Load saved settings
 function loadSettings() {
   chrome.storage.sync.get(DEFAULTS, (items) => {
     ignorePinnedTabsCheckbox.checked = items.ignorePinnedTabs;
     detectDuplicateDocsCheckbox.checked = items.detectDuplicateGoogleDocs;
+    badgeEnabledCheckbox.checked = items.badgeEnabled;
     accessModeRadios.forEach((radio) => {
       radio.checked = radio.value === items.accessMode;
+    });
+    operationsUiModeRadios.forEach((radio) => {
+      radio.checked = radio.value === items.operationsUiMode;
     });
     languageSelect.value = items.language;
   });
@@ -36,10 +51,15 @@ function loadSettings() {
 // Save settings
 function saveSettings() {
   const selectedAccessMode = document.querySelector('input[name="access-mode"]:checked');
+  const selectedOperationsUiMode = document.querySelector('input[name="operations-ui-mode"]:checked');
   const settings = {
     ignorePinnedTabs: ignorePinnedTabsCheckbox.checked,
     detectDuplicateGoogleDocs: detectDuplicateDocsCheckbox.checked,
+    badgeEnabled: badgeEnabledCheckbox.checked,
     accessMode: selectedAccessMode ? selectedAccessMode.value : DEFAULTS.accessMode,
+    operationsUiMode: selectedOperationsUiMode
+      ? selectedOperationsUiMode.value
+      : DEFAULTS.operationsUiMode,
     language: languageSelect.value,
   };
 
@@ -126,7 +146,9 @@ function renderUsageItem(action, stat, maxCount) {
 // Event listeners
 ignorePinnedTabsCheckbox.addEventListener('change', saveSettings);
 detectDuplicateDocsCheckbox.addEventListener('change', saveSettings);
+badgeEnabledCheckbox.addEventListener('change', saveSettings);
 accessModeRadios.forEach((radio) => radio.addEventListener('change', saveSettings));
+operationsUiModeRadios.forEach((radio) => radio.addEventListener('change', saveSettings));
 languageSelect.addEventListener('change', saveSettings);
 usageSuggestionsEnabledCheckbox.addEventListener('change', saveUsagePreferences);
 usageSortEnabledCheckbox.addEventListener('change', saveUsagePreferences);
@@ -150,6 +172,7 @@ resetUsageBtn.addEventListener('click', () => {
 });
 
 // Load usage stats on page load
+localizeOperationsMode();
 loadUsageStats();
 loadUsagePreferences();
 

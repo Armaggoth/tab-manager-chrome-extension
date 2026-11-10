@@ -51,6 +51,18 @@
     "message": "Move Ungrouped to New Window",
     "description": "Button to move ungrouped tabs from the current window to a new window"
   },
+  "moveActiveTabToNewWindow": {
+    "message": "Move Active Tab to New Window",
+    "description": "Button to move only the active tab to a new window"
+  },
+  "bringDomainToCurrentWindow": {
+    "message": "Bring Domain to This Window",
+    "description": "Button to bring tabs from the active tab's domain in other windows to the current window"
+  },
+  "bringDomainToCurrentWindowNoSubdomain": {
+    "message": "Bring Base Domain to This Window",
+    "description": "Button to bring tabs from the active tab's base domain in other windows to the current window"
+  },
   "bringToWindow": {
     "message": "Bring All to This Window",
     "description": "Button to bring all tabs to current window"
@@ -98,6 +110,66 @@
   "settingsSaved": {
     "message": "Settings saved!",
     "description": "Status message when settings are saved"
+  },
+  "mostUsedTab": {
+    "message": "Most Used",
+    "description": "First tab in the icon action view"
+  },
+  "actionCategories": {
+    "message": "Action categories",
+    "description": "Accessible name for the action category tabs"
+  },
+  "sortGroup": {
+    "message": "Sort & Group",
+    "description": "Category tab for sorting and grouping actions"
+  },
+  "cleanUpGroup": {
+    "message": "Clean Up",
+    "description": "Category tab for cleanup actions"
+  },
+  "moveTabsGroup": {
+    "message": "Move Tabs",
+    "description": "Category tab for moving tabs"
+  },
+  "searchFocusGroup": {
+    "message": "Search & Focus",
+    "description": "Category tab for finding and focusing tabs"
+  },
+  "closeTabsGroup": {
+    "message": "Close Tabs",
+    "description": "Category tab for closing tabs"
+  },
+  "mostUsedEmpty": {
+    "message": "Actions will appear here as you use them.",
+    "description": "Empty state for the Most Used actions tab"
+  },
+  "pinAction": {
+    "message": "Pin $1 to Most Used",
+    "description": "Accessible label and tooltip for pinning an action"
+  },
+  "unpinAction": {
+    "message": "Unpin $1 from Most Used",
+    "description": "Accessible label and tooltip for unpinning an action"
+  },
+  "switchToText": {
+    "message": "Switch to Text",
+    "description": "Button to change the operations display to Text"
+  },
+  "operationsDisplay": {
+    "message": "Operations Display",
+    "description": "Settings heading for Text or Icons action presentation"
+  },
+  "operationsDisplayDescription": {
+    "message": "Choose a sectioned action list or a tabbed view with action icons.",
+    "description": "Description for the operations display setting"
+  },
+  "textMode": {
+    "message": "Text",
+    "description": "Text presentation option"
+  },
+  "iconsMode": {
+    "message": "Icons",
+    "description": "Icon presentation option"
   },
   "resetToDefaults": {
     "message": "Reset to Defaults",

@@ -25,6 +25,7 @@ Chrome Tab/Window APIs
 2. **Grouped Tabs**: Normal organization and cleanup operations must protect tabs that are already in a group. Grouped tabs are filtered out by `filterTabs()` and `filterUngroupedTabs()` across Sort, Group, Move Ungrouped, and Remove Duplicates. The operations that affect grouped tabs are:
   - **Ungroup**: explicitly dissolves all tab groups in the window.
   - **Move Domain (Current Window)** and **Move Domain (All Windows)**: move all matching same-domain tabs, including grouped tabs, to a new window.
+  - **Move Active Tab to New Window**: moves only the active tab, including when it is grouped.
   - **Close Domain (Current Window)** and **Close Domain (All Windows)**: close all matching same-domain tabs, including grouped tabs, after confirmation.
   - **Bring All to This Window**: moves all tabs from other windows into the current window, preserving pinned state and group assignments.
   - **Find Media Playing**: can focus/highlight a tab even if it is inside a group.

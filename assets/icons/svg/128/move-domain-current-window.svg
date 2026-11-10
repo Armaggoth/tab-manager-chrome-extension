@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs><clipPath id="clip1"><rect x="12" y="12" width="104" height="96" rx="3.2"/></clipPath></defs>
+  <rect x="10.0" y="10.0" width="108" height="100" rx="5.2" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="4"/>
+  <g clip-path="url(#clip1)"><rect x="12" y="12" width="104" height="22" fill="#3B8BE8"/><rect x="12" y="34" width="104" height="2.0" fill="#1B2B4B"/></g>
+  <circle cx="27.4" cy="23.0" r="3.74" fill="#FFFFFF"/>
+  <circle cx="39.5" cy="23.0" r="3.74" fill="#FFFFFF"/>
+  <circle cx="51.6" cy="23.0" r="3.74" fill="#FFFFFF"/>
+  <rect x="22" y="46" width="62.4" height="5" rx="2.5" fill="#BBD9FA"/>
+  <rect x="22" y="59" width="41.6" height="5" rx="2.5" fill="#BBD9FA"/>
+  <rect x="22" y="72" width="41.6" height="5" rx="2.5" fill="#BBD9FA"/>
+  <rect x="22" y="85" width="41.6" height="5" rx="2.5" fill="#BBD9FA"/>
+  <rect x="18.0" y="50.0" width="17.6" height="16.0" rx="2.0" fill="#FFC83D" stroke="#1B2B4B" stroke-width="4"/>
+  <rect x="18.0" y="58.0" width="44" height="28.0" rx="2.8" fill="#FFC83D" stroke="#1B2B4B" stroke-width="4"/>
+  <rect x="20.0" y="56.0" width="13.600000000000001" height="4" rx="0" fill="#FFC83D"/>
+  <rect x="23.0" y="66.0" width="34" height="5" rx="2.5" fill="#FFE08A"/>
+  <line x1="76.0" y1="68" x2="100.0" y2="68.0" stroke="#1B2B4B" stroke-width="4"/>
+  <polygon points="108.0,68 92.0,77.92 92.0,58.08" fill="#1B2B4B" stroke="#1B2B4B" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M104,28.0 Q104,36.0 112.0,36.0 Q104,36.0 104,44.0 Q104,36.0 96.0,36.0 Q104,36.0 104,28.0 Z" fill="#FFC83D"/>
+</svg>

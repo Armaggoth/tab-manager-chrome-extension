@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <defs><clipPath id="clip1"><rect x="29" y="5" width="14" height="8" rx="0.7000000000000002"/></clipPath><clipPath id="clip2"><rect x="29" y="20" width="14" height="8" rx="0.7000000000000002"/></clipPath><clipPath id="clip3"><rect x="29" y="35" width="14" height="8" rx="0.7000000000000002"/></clipPath></defs>
+  <rect x="6.699999999999999" y="16.299999999999997" width="4.75" height="5.5" rx="0.5" fill="#F4B731" stroke="#1B2B4B" stroke-width="2"/>
+  <rect x="6.699999999999999" y="19.299999999999997" width="13" height="10.0" rx="0.7999999999999998" fill="#F4B731" stroke="#1B2B4B" stroke-width="2"/>
+  <rect x="7.699999999999999" y="18.299999999999997" width="2.75" height="2" rx="0" fill="#F4B731"/>
+  <rect x="4.0" y="19.0" width="4.75" height="5.5" rx="0.5" fill="#FFC83D" stroke="#1B2B4B" stroke-width="2"/>
+  <rect x="4.0" y="22.0" width="13" height="10.0" rx="0.7999999999999998" fill="#FFC83D" stroke="#1B2B4B" stroke-width="2"/>
+  <rect x="5.0" y="21.0" width="2.75" height="2" rx="0" fill="#FFC83D"/>
+  <rect x="28.0" y="4.0" width="16" height="10" rx="1.7000000000000002" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="2"/>
+  <g clip-path="url(#clip1)"><rect x="29" y="5" width="14" height="2.56" fill="#3B8BE8"/><rect x="29" y="7.5600000000000005" width="14" height="1" fill="#1B2B4B"/></g>
+  <rect x="28.0" y="19.0" width="16" height="10" rx="1.7000000000000002" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="2"/>
+  <g clip-path="url(#clip2)"><rect x="29" y="20" width="14" height="2.56" fill="#3B8BE8"/><rect x="29" y="22.56" width="14" height="1" fill="#1B2B4B"/></g>
+  <rect x="28.0" y="34.0" width="16" height="10" rx="1.7000000000000002" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="2"/>
+  <g clip-path="url(#clip3)"><rect x="29" y="35" width="14" height="2.56" fill="#3B8BE8"/><rect x="29" y="37.56" width="14" height="1" fill="#1B2B4B"/></g>
+  <line x1="19.5" y1="25.5" x2="25.208662376750148" y2="11.228344058124623" stroke="#1B2B4B" stroke-width="2"/>
+  <polygon points="26.099999999999998,9 27.080471385574832,14.561946769079059 21.55417812142577,12.351429463419434" fill="#1B2B4B" stroke="#1B2B4B" stroke-width="0.6" stroke-linejoin="round"/>
+  <line x1="19.5" y1="25.5" x2="23.759681146100494" y2="24.531890648613523" stroke="#1B2B4B" stroke-width="2"/>
+  <polygon points="26.099999999999998,24 22.07890669648176,27.965776676062433 20.75981788792022,22.161785918391665" fill="#1B2B4B" stroke="#1B2B4B" stroke-width="0.6" stroke-linejoin="round"/>
+  <line x1="19.5" y1="25.5" x2="25.045895683188135" y2="36.843877533793915" stroke="#1B2B4B" stroke-width="2"/>
+  <polygon points="26.099999999999998,39 21.31819950828073,35.994844420434546 26.665383224471814,33.38066571474113" fill="#1B2B4B" stroke="#1B2B4B" stroke-width="0.6" stroke-linejoin="round"/>
+</svg>

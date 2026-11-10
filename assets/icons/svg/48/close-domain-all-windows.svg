@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <defs><clipPath id="clip1"><rect x="5" y="5" width="26" height="20" rx="0.7000000000000002"/></clipPath><clipPath id="clip2"><rect x="11" y="14" width="26" height="20" rx="0.7000000000000002"/></clipPath><clipPath id="clip3"><rect x="17" y="23" width="26" height="20" rx="0.7000000000000002"/></clipPath></defs>
+  <rect x="4.0" y="4.0" width="28" height="22" rx="1.7000000000000002" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="2"/>
+  <g clip-path="url(#clip1)"><rect x="5" y="5" width="26" height="6.4" fill="#BBD9FA"/><rect x="5" y="11.4" width="26" height="1" fill="#1B2B4B"/></g>
+  <rect x="10.0" y="13.0" width="28" height="22" rx="1.7000000000000002" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="2"/>
+  <g clip-path="url(#clip2)"><rect x="11" y="14" width="26" height="6.4" fill="#BBD9FA"/><rect x="11" y="20.4" width="26" height="1" fill="#1B2B4B"/></g>
+  <rect x="16.0" y="22.0" width="28" height="22" rx="1.7000000000000002" fill="#F2F7FE" stroke="#1B2B4B" stroke-width="2"/>
+  <g clip-path="url(#clip3)"><rect x="17" y="23" width="26" height="6.4" fill="#3B8BE8"/><rect x="17" y="29.4" width="26" height="1" fill="#1B2B4B"/></g>
+  <circle cx="34.5" cy="34.5" r="7.399999999999999" fill="#E5483D" stroke="#1B2B4B" stroke-width="2"/>
+  <path d="M30.972,30.972 L38.028,38.028 M30.972,38.028 L38.028,30.972" stroke="#FFFFFF" stroke-width="3.0" stroke-linecap="round" fill="none"/>
+</svg>

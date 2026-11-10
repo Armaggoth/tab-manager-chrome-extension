@@ -1,6 +1,6 @@
 # Feature Usage Tracking, Threshold Suggestion & Reorder Plan
 
-**Status**: Steps 1-3 implemented (usage tracking, Settings "Usage" tab, threshold suggestion banner, and a Most Used action group when usage sorting is enabled).
+**Status**: Implemented (usage tracking, Settings "Usage" tab, threshold suggestion banner, Most Used group, and manual action pinning).
 
 ## Step 1: Track feature usage + show it in Settings
 
@@ -109,7 +109,7 @@ button so users don't have to wait for the threshold.
 ### Side panel
 
 **Implemented**: when `usageSortEnabled` is true, the side panel and popup prepend
-a duplicate-safe "Most Used" group containing the top five used actions. The
+a duplicate-safe "Most Used" group containing up to six actions ranked by usage. The
 original categorized action groups remain below it.
 
 Rather than reshuffling buttons within their existing categorized groups
@@ -117,7 +117,7 @@ Rather than reshuffling buttons within their existing categorized groups
 the progressive-disclosure guidance already in
 [docs/research/03-progressive-disclosure.md](../research/03-progressive-disclosure.md)
 about not hiding or scrambling things unpredictably), promote the **top-N
-most-used actions** (e.g. top 5) into a pinned "Most Used" group at the top of
+most-used actions** into a "Most Used" group at the top of
 [side-panel.html](../../side-panel.html). This keeps existing
 categories/muscle memory intact while surfacing what's actually used.
 Recomputed at panel load from current `usageStats` — no separate persisted
@@ -140,3 +140,34 @@ Unit tests for the ranking/promotion function on canned `usageStats`
 fixtures — correct top-N selection, stable tie-breaking (fall back to
 original registration order when counts are equal), and the
 threshold-detection function's sample-size/margin logic.
+
+## Manual Pins in Most Used
+
+Users can pin and unpin actions using an icon-only control on every action row
+in the popup and side panel, in either Text or Icons mode. The outlined pin
+indicates an unpinned action; the solid pin indicates a pinned action. Both
+states have localized accessible names and tooltips.
+
+The `pinnedActions` array is stored in `chrome.storage.local`, separately from
+usage counts. Pins therefore persist across panel reloads and browser restarts,
+and resetting usage statistics does not clear them. Manually pinned actions are
+ranked by usage count, with the normal action display order breaking ties.
+
+Pinned actions appear first in Most Used. The group is filled with the most-used
+unpinned actions up to six total; if more than six actions are manually pinned,
+all pins remain visible. Pinned actions are not duplicated in the Text-mode
+categories while promoted to Most Used. In Icons mode, category tabs retain
+their full action lists as before. Unpinning clears only the manual pin, so the
+action may remain in Most Used if usage sorting is enabled and it ranks among
+the six most-used actions. When usage sorting is disabled and the final manual
+pin is removed, the Most Used group is hidden.
+
+Pins are local to the current Chrome profile. Login-based syncing and sharing
+settings through Google Drive are separate future features and are not part of
+this implementation.
+
+Tests cover usage-based ordering, the six-action fill limit, retaining more
+than six manual pins, and pin persistence/unpinning in the shared action
+renderer. Both Operations surfaces refresh affected-tab counts after each
+action-list render, including pin/unpin and usage updates, without registering
+additional browser event listeners.

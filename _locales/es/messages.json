@@ -51,6 +51,18 @@
     "message": "Mover No Agrupadas a Nueva Ventana",
     "description": "Botón para mover pestañas no agrupadas de la ventana actual a una ventana nueva"
   },
+  "moveActiveTabToNewWindow": {
+    "message": "Mover Pestaña Activa a Nueva Ventana",
+    "description": "Botón para mover solo la pestaña activa a una ventana nueva"
+  },
+  "bringDomainToCurrentWindow": {
+    "message": "Traer Dominio a Esta Ventana",
+    "description": "Botón para traer las pestañas del dominio de la pestaña activa en otras ventanas a la ventana actual"
+  },
+  "bringDomainToCurrentWindowNoSubdomain": {
+    "message": "Traer Dominio Base a Esta Ventana",
+    "description": "Botón para traer las pestañas del dominio base de la pestaña activa en otras ventanas a la ventana actual"
+  },
   "bringToWindow": {
     "message": "Traer Todos a Esta Ventana",
     "description": "Button to bring all tabs to current window"
@@ -98,6 +110,66 @@
   "settingsSaved": {
     "message": "¡Configuración guardada!",
     "description": "Status message when settings are saved"
+  },
+  "mostUsedTab": {
+    "message": "Más usadas",
+    "description": "Primera pestaña en la vista de acciones con iconos"
+  },
+  "actionCategories": {
+    "message": "Categorías de acciones",
+    "description": "Nombre accesible de las pestañas de categorías de acciones"
+  },
+  "sortGroup": {
+    "message": "Ordenar y agrupar",
+    "description": "Pestaña de categoría para ordenar y agrupar acciones"
+  },
+  "cleanUpGroup": {
+    "message": "Limpiar",
+    "description": "Pestaña de categoría para acciones de limpieza"
+  },
+  "moveTabsGroup": {
+    "message": "Mover pestañas",
+    "description": "Pestaña de categoría para mover pestañas"
+  },
+  "searchFocusGroup": {
+    "message": "Buscar y enfocar",
+    "description": "Pestaña de categoría para buscar y enfocar pestañas"
+  },
+  "closeTabsGroup": {
+    "message": "Cerrar pestañas",
+    "description": "Pestaña de categoría para cerrar pestañas"
+  },
+  "mostUsedEmpty": {
+    "message": "Las acciones aparecerán aquí a medida que las uses.",
+    "description": "Estado vacío de la pestaña de acciones más usadas"
+  },
+  "pinAction": {
+    "message": "Fijar $1 en Más usadas",
+    "description": "Etiqueta accesible y ayuda para fijar una acción"
+  },
+  "unpinAction": {
+    "message": "Desfijar $1 de Más usadas",
+    "description": "Etiqueta accesible y ayuda para desfijar una acción"
+  },
+  "switchToText": {
+    "message": "Cambiar a texto",
+    "description": "Botón para cambiar la presentación de acciones a texto"
+  },
+  "operationsDisplay": {
+    "message": "Presentación de acciones",
+    "description": "Encabezado de configuración para la presentación de acciones"
+  },
+  "operationsDisplayDescription": {
+    "message": "Elige una lista de acciones por secciones o una vista con pestañas e iconos.",
+    "description": "Descripción de la opción de presentación de acciones"
+  },
+  "textMode": {
+    "message": "Texto",
+    "description": "Opción de presentación de texto"
+  },
+  "iconsMode": {
+    "message": "Iconos",
+    "description": "Opción de presentación con iconos"
   },
   "resetToDefaults": {
     "message": "Restablecer Valores Predeterminados",

@@ -33,7 +33,7 @@ Design patterns, component specifications, and recommended structure.
 Service worker patterns, message passing, Chrome APIs, and implementation details.
 
 - [Undo Feature Plan](architecture/undo-feature.md) – Planned undo/redo design for the last 20 actions
-- [Feature Usage Tracking](architecture/feature-usage-tracking.md) – Implemented usage stats, threshold suggestion, and menu reordering
+- [Feature Usage Tracking](architecture/feature-usage-tracking.md) – Usage stats, Most Used actions, and persistent manual pinning
 
 ### [📋 Guides](guides/index.md) – Setup & Development Guides
 - [SETUP.md](guides/SETUP.md) – Initial project setup

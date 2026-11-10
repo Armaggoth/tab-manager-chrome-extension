@@ -9,22 +9,24 @@ import {
   renderConfiguredActionGroups,
 } from './panel-actions.js';
 
-await renderConfiguredActionGroups(document.getElementById('actions-grid'));
-
-const buttons = getActionButtons({
-  settings: document.getElementById('settings-btn'),
-  scrambleTabs: document.getElementById('scramble-tabs'),
-  readCurrentDomains: document.getElementById('read-current-domains'),
-  readAllWindows: document.getElementById('read-all-windows'),
-  copyTabList: document.getElementById('copy-tab-list'),
+let buttons;
+const refreshAffectedTabCounts = await initAffectedTabCounts();
+await renderConfiguredActionGroups(document.getElementById('actions-grid'), async () => {
+  buttons = getActionButtons({
+    settings: document.getElementById('settings-btn'),
+    scrambleTabs: document.getElementById('scramble-tabs'),
+    readCurrentDomains: document.getElementById('read-current-domains'),
+    readAllWindows: document.getElementById('read-all-windows'),
+    copyTabList: document.getElementById('copy-tab-list'),
+  });
+  initActionButtons(buttons, { afterSortByDomain: readCurrentDomains });
+  await refreshAffectedTabCounts();
 });
 
 const debugStatus = document.getElementById('debug-status');
 const debugTabsList = document.getElementById('debug-tabs-list');
 
-initActionButtons(buttons, { afterSortByDomain: readCurrentDomains });
 initPinnedTabsCue();
-initAffectedTabCounts();
 initUsageSuggestion({ afterSortEnabled: () => location.reload() });
 
 // Get current window tabs
